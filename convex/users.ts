@@ -39,23 +39,22 @@ export const syncUser = mutation({
       .first();
 
     if (existingUser) {
-      // Update existing user
+      // Update existing user but preserve the role
       return await ctx.db.patch(existingUser._id, {
         email: args.email,
         firstName: args.firstName,
-        lastName: args.lastName,
+        lastName: args.lastName || "",
         imageUrl: args.imageUrl,
-        role: args.role || "user",
         lastSignInAt: args.lastSignInAt,
         updatedAt: Date.now(),
       });
     } else {
-      // Create new user
+      // Create new user with default role
       return await ctx.db.insert("users", {
         clerkId: args.clerkId,
         email: args.email,
         firstName: args.firstName,
-        lastName: args.lastName,
+        lastName: args.lastName || "",
         imageUrl: args.imageUrl,
         role: args.role || "user",
         lastSignInAt: args.lastSignInAt,

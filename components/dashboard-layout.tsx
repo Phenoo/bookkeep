@@ -2,12 +2,10 @@
 
 import type React from "react";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Banknote,
-  BarChart3,
   BookOpen,
   ClipboardList,
   DollarSign,
@@ -44,8 +42,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserButton } from "@clerk/clerk-react";
+import { UserButton, useUser } from "@clerk/clerk-react";
 import { ModeToggle } from "./mode-toggle";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { InventoryAlerts } from "./inventory-alerts";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,8 +58,14 @@ export default function DashboardLayout({
   userRole = "user",
 }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const [role, setRole] = useState<"admin" | "user">(userRole);
 
+  const { user } = useUser();
+
+  const getUser = useQuery(api.users.getByClerkId, {
+    clerkId: user?.id!,
+  });
+
+  const role = getUser?.role;
   // Common navigation items
   const dashboardItems = [
     {
@@ -173,7 +180,7 @@ export default function DashboardLayout({
   const adminItems = [
     {
       title: "Users",
-      href: "/dashboard/users",
+      href: "/dashboard/admin/users",
       icon: Users,
     },
     {
@@ -190,15 +197,12 @@ export default function DashboardLayout({
   ];
 
   // Toggle role for demo purposes
-  const toggleRole = () => {
-    setRole(role === "admin" ? "user" : "admin");
-  };
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <Sidebar>
-          <SidebarHeader className="flex h-14 items-center border-b px-4">
+          <SidebarHeader className="flex h-14 items-center justify-center border-b px-4">
             <Link
               href="/dashboard"
               className="flex items-center gap-2 font-semibold"
@@ -337,7 +341,7 @@ export default function DashboardLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleRole}>
+                  <DropdownMenuItem>
                     <Users className="mr-2 h-4 w-4" />
                     <span>Switch to {role === "admin" ? "User" : "Admin"}</span>
                   </DropdownMenuItem>
@@ -362,6 +366,9 @@ export default function DashboardLayout({
               </span>
               <UserButton afterSwitchSessionUrl="/" />
               <ModeToggle />
+            </div>
+            <div className="">
+              <InventoryAlerts />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>

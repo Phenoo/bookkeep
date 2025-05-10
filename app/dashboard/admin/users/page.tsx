@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,19 +57,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, MoreHorizontal, Search, Shield, User } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  AlertTriangle,
+  Edit,
+  MoreHorizontal,
+  Search,
+  Shield,
+  User,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function UsersPage() {
-  const { toast } = useToast();
+  const router = useRouter();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isRoleHistoryDialogOpen, setIsRoleHistoryDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
+  const [roleChangeReason, setRoleChangeReason] = useState("");
+  const [roleChangeHistory, setRoleChangeHistory] = useState<any[]>([]);
+  const [userIdForHistory, setUserIdForHistory] = useState<string | null>(null);
 
   // Fetch users from Convex
   const users = useQuery(api.users.getAll) || [];
+
+  const updateRole = useMutation(api.users.updateRole);
 
   // Filter users based on search query
   const filteredUsers = users.filter(
@@ -86,14 +114,48 @@ export default function UsersPage() {
     }
   };
 
+  const openRoleUpdateDialog = (user: any) => {
+    setSelectedUser({
+      ...user,
+      previousRole: user.role,
+    });
+    setRoleChangeReason("");
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleUpdateRole = async () => {
+    if (!selectedUser) return;
+
+    setIsLoading(true);
+
+    const promise = updateRole({
+      clerkId: selectedUser.clerkId,
+      role: selectedUser.role,
+    });
+
+    toast.promise(promise, {
+      loading: "Updating user role",
+      success: `${selectedUser.firstName} ${selectedUser.lastName}'s role has been updated to ${selectedUser.role}`,
+      error: "Failed to update role. Please try again.",
+    });
+    setIsConfirmDialogOpen(false);
+
+    setIsLoading(false);
+  };
+
+  const confirmRoleUpdate = () => {
+    setIsEditUserDialogOpen(false);
+    setIsConfirmDialogOpen(true);
+  };
   // Get initials from name
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return "U";
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
-  // Sync users on initial load
-
+  const viewUserDetails = (userId: string) => {
+    router.push(`/dashboard/users/${userId}`);
+  };
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -129,6 +191,10 @@ export default function UsersPage() {
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Details
+                    </TableHead>
+
                     <TableHead className="hidden md:table-cell">
                       Last Sign In
                     </TableHead>
@@ -168,6 +234,15 @@ export default function UsersPage() {
                               user.role.slice(1)}
                           </Badge>
                         </TableCell>
+                        <TableCell className="font-medium">
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-medium"
+                            onClick={() => viewUserDetails(user._id)}
+                          >
+                            Show
+                          </Button>
+                        </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {user.lastSignInAt
                             ? formatDistanceToNow(new Date(user.lastSignInAt), {
@@ -188,8 +263,7 @@ export default function UsersPage() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsEditUserDialogOpen(true);
+                                  openRoleUpdateDialog(user);
                                 }}
                               >
                                 <Shield className="mr-2 h-4 w-4" /> Change Role
@@ -217,6 +291,7 @@ export default function UsersPage() {
       </div>
 
       {/* Edit User Role Dialog */}
+      {/* Edit User Role Dialog */}
       {selectedUser && (
         <Dialog
           open={isEditUserDialogOpen}
@@ -232,8 +307,25 @@ export default function UsersPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">
-                  Role
+                <Label htmlFor="current-role" className="text-right">
+                  Current Role
+                </Label>
+                <div className="col-span-3">
+                  <Badge
+                    variant="outline"
+                    className={getRoleColor(selectedUser.previousRole)}
+                  >
+                    {selectedUser.previousRole === "admin" && (
+                      <Shield className="mr-1 h-3 w-3" />
+                    )}
+                    {selectedUser.previousRole.charAt(0).toUpperCase() +
+                      selectedUser.previousRole.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-role" className="text-right">
+                  New Role
                 </Label>
                 <Select
                   value={selectedUser.role}
@@ -251,14 +343,103 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="reason" className="text-right pt-2">
+                  Reason
+                </Label>
+                <Textarea
+                  id="reason"
+                  placeholder="Provide a reason for this role change"
+                  className="col-span-3"
+                  value={roleChangeReason}
+                  onChange={(e) => setRoleChangeReason(e.target.value)}
+                />
+              </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Updating..." : "Save Changes"}
+              <Button
+                variant="outline"
+                onClick={() => setIsEditUserDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                onClick={confirmRoleUpdate}
+                disabled={
+                  selectedUser.role === selectedUser.previousRole ||
+                  isLoading ||
+                  !roleChangeReason
+                }
+              >
+                Continue
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Confirm Role Change Dialog */}
+      {selectedUser && (
+        <AlertDialog
+          open={isConfirmDialogOpen}
+          onOpenChange={setIsConfirmDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
+              <AlertDialogDescription>
+                {selectedUser.role === "admin" ? (
+                  <div className="flex items-center text-amber-600 mb-2">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    <span>
+                      You are about to grant administrative privileges.
+                    </span>
+                  </div>
+                ) : selectedUser.previousRole === "admin" ? (
+                  <div className="flex items-center text-amber-600 mb-2">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    <span>
+                      You are about to remove administrative privileges.
+                    </span>
+                  </div>
+                ) : null}
+                Are you sure you want to change {selectedUser.firstName}{" "}
+                {selectedUser.lastName}'s role from{" "}
+                <Badge
+                  variant="outline"
+                  className={getRoleColor(selectedUser.previousRole)}
+                >
+                  {selectedUser.previousRole.charAt(0).toUpperCase() +
+                    selectedUser.previousRole.slice(1)}
+                </Badge>{" "}
+                to{" "}
+                <Badge
+                  variant="outline"
+                  className={getRoleColor(selectedUser.role)}
+                >
+                  {selectedUser.role.charAt(0).toUpperCase() +
+                    selectedUser.role.slice(1)}
+                </Badge>
+                ?
+                {sendEmail && (
+                  <p className="mt-2">
+                    An email notification will be sent to {selectedUser.email}.
+                  </p>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleUpdateRole}
+                disabled={isLoading}
+              >
+                {isLoading ? "Updating..." : "Confirm Change"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </>
   );

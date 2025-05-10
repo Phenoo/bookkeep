@@ -15,11 +15,13 @@ export function UserSync() {
     syncUser({
       clerkId: user.id,
       email: user.emailAddresses[0]?.emailAddress,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
       imageUrl: user.imageUrl,
       lastSignInAt: Date.now(),
-      createdAt: new Date(user.createdAt).getTime(),
+      createdAt: user.createdAt
+        ? new Date(user.createdAt).getTime()
+        : new Date().getTime(),
     });
   }, [isLoaded, user, syncUser]);
 

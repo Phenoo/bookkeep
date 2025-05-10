@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import DashboardLayout from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -22,117 +29,155 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Download, FileText, Search } from "lucide-react";
+import { Search, Calendar, Eye } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Spinner } from "@/components/spinner";
 
-// Sample records data
-const records = [
-  {
-    id: "REC001",
-    type: "Inventory Update",
-    description: "Added 50 units of Office Desk (INV001)",
-    createdBy: "John Doe",
-    date: "2023-05-01",
-  },
-  {
-    id: "REC002",
-    type: "Process Completion",
-    description: "Completed Equipment Maintenance (PROC003)",
-    createdBy: "Mike Johnson",
-    date: "2023-05-05",
-  },
-  {
-    id: "REC003",
-    type: "Inventory Update",
-    description: "Removed 5 units of Laptop Stand (INV003)",
-    createdBy: "Jane Smith",
-    date: "2023-05-06",
-  },
-  {
-    id: "REC004",
-    type: "Process Update",
-    description: "Updated progress of Inventory Audit (PROC001) to 65%",
-    createdBy: "John Doe",
-    date: "2023-05-07",
-  },
-  {
-    id: "REC005",
-    type: "Inventory Update",
-    description: "Added 20 units of Wireless Mouse (INV004)",
-    createdBy: "Sarah Williams",
-    date: "2023-05-08",
-  },
-  {
-    id: "REC006",
-    type: "Process Creation",
-    description: "Created new process: Staff Training (PROC004)",
-    createdBy: "Sarah Williams",
-    date: "2023-05-05",
-  },
-  {
-    id: "REC007",
-    type: "Inventory Update",
-    description: "Updated Desk Lamp (INV007) quantity to 5 units",
-    createdBy: "John Doe",
-    date: "2023-05-07",
-  },
-  {
-    id: "REC008",
-    type: "Process Update",
-    description: "Updated progress of Supplier Evaluation (PROC005) to 80%",
-    createdBy: "John Doe",
-    date: "2023-05-08",
-  },
-];
+export default function ActivityPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterAction, setFilterAction] = useState("all");
+  const [filterResource, setFilterResource] = useState("all");
 
-export default function RecordsPage() {
+  // Fetch activity from Convex
+  const activities = useQuery(api.userActivity.getAll) || [];
+  const users = useQuery(api.users.getAll) || [];
+
+  // Get user name by ID
+  const getUserName = (userId: string) => {
+    const user = users.find((u) => u.clerkId === userId);
+    if (user) {
+      return (
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email
+      );
+    }
+    return "Unknown User";
+  };
+
+  // Filter activities based on search query and filters
+  const filteredActivities = activities.filter((activity) => {
+    // Filter by search query
+    const userName = getUserName(activity.userId);
+    const matchesSearch =
+      userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (activity.details &&
+        activity.details.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Filter by action
+    const matchesAction =
+      filterAction === "all" || activity.action === filterAction;
+
+    return matchesSearch && matchesAction;
+  });
+
+  // Get unique actions and resource types for filters
+  const uniqueActions = Array.from(
+    new Set(activities.map((activity) => activity.action))
+  );
+
+  // Get action badge color
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case "login":
+        return "bg-green-100 text-green-800 hover:bg-green-100";
+      case "logout":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case "create":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100";
+      case "update":
+        return "bg-amber-100 text-amber-800 hover:bg-amber-100";
+      case "delete":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    }
+  };
+
+  // Get resource type badge color
+  const getResourceTypeColor = (resourceType: string) => {
+    switch (resourceType) {
+      case "user":
+        return "bg-indigo-100 text-indigo-800 hover:bg-indigo-100";
+      case "order":
+        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100";
+      case "menu":
+        return "bg-orange-100 text-orange-800 hover:bg-orange-100";
+      case "system":
+        return "bg-slate-100 text-slate-800 hover:bg-slate-100";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    }
+  };
+
+  if (activities === undefined || users === undefined) {
+    return <Spinner />;
+  }
+
+  if (activities === null || users === null) {
+    return <Spinner />;
+  }
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Records</h1>
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" /> Export Records
-        </Button>
-      </div>
+    <>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">User Activity</h1>
+          <Button variant="outline">
+            <Calendar className="mr-2 h-4 w-4" /> Date Range
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Records</CardTitle>
-          <CardDescription>
-            View all activity records related to inventory and processes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Log</CardTitle>
+            <CardDescription>
+              View all user activity in the system.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
               <div className="relative w-full sm:max-w-xs">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search records..."
+                  placeholder="Search activity..."
                   className="pl-8 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Select defaultValue="all">
+                <Select value={filterAction} onValueChange={setFilterAction}>
                   <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Record Type" />
+                    <SelectValue placeholder="Action Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="inventory">Inventory Update</SelectItem>
-                    <SelectItem value="process">Process Update</SelectItem>
-                    <SelectItem value="completion">
-                      Process Completion
-                    </SelectItem>
-                    <SelectItem value="creation">Process Creation</SelectItem>
+                    <SelectItem value="all">All Actions</SelectItem>
+                    {uniqueActions.map((action) => (
+                      <SelectItem key={action} value={action}>
+                        {action.charAt(0).toUpperCase() + action.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline" size="icon" className="shrink-0">
-                  <Calendar className="h-4 w-4" />
-                  <span className="sr-only">Date filter</span>
-                </Button>
+                {/* <Select
+                  value={filterResource}
+                  onValueChange={setFilterResource}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Resource Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Resources</SelectItem>
+                    {uniqueResourceTypes.map((resourceType) => (
+                      <SelectItem key={resourceType} value={resourceType}>
+                        {resourceType.charAt(0).toUpperCase() +
+                          resourceType.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select> */}
               </div>
             </div>
 
@@ -140,49 +185,65 @@ export default function RecordsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Type</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Action</TableHead>
                     <TableHead className="hidden md:table-cell">
-                      Description
+                      Details
                     </TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="w-[80px]">Details</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead className="w-[80px]">View</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {records.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="font-medium">{record.id}</TableCell>
-                      <TableCell>{record.type}</TableCell>
-                      <TableCell className="hidden md:table-cell max-w-xs truncate">
-                        {record.description}
-                      </TableCell>
-                      <TableCell>{record.createdBy}</TableCell>
-                      <TableCell>{record.date}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <FileText className="h-4 w-4" />
-                          <span className="sr-only">View details</span>
-                        </Button>
+                  {filteredActivities.length > 0 ? (
+                    filteredActivities.map((activity) => (
+                      <TableRow key={activity._id}>
+                        <TableCell className="font-medium">
+                          {getUserName(activity.userId)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={getActionColor(activity.action)}
+                          >
+                            {activity.action.charAt(0).toUpperCase() +
+                              activity.action.slice(1)}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="hidden md:table-cell max-w-xs truncate">
+                          {activity.details || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            title={format(new Date(activity.timestamp), "PPpp")}
+                          >
+                            {formatDistanceToNow(new Date(activity.timestamp), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View details</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No activity found.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
-
-            <div className="flex items-center justify-end space-x-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

@@ -43,6 +43,8 @@ export const add = mutation({
     if (!identity) {
       throw new Error("Not authenticated");
     }
+    const userId = identity?.subject || "anonymous";
+
     // Create the booking
     const bookingId = await ctx.db.insert("bookings", {
       customerName: args.customerName,
@@ -56,7 +58,7 @@ export const add = mutation({
       depositAmount: args.depositAmount,
       notes: args.notes,
       status: args.status,
-      createdBy: args.createdBy,
+      createdBy: userId,
     });
 
     const sales = (await ctx.db.query("sales").order("desc").collect()) || [];
@@ -87,7 +89,7 @@ export const add = mutation({
       customerEmail: args.customerEmail,
       notes: `Booking for ${args.customerName} from ${args.startDate} to ${args.endDate}`,
       saleDate: new Date().toISOString(),
-      createdBy: args.createdBy,
+      createdBy: userId,
       status: "completed",
     });
 

@@ -126,7 +126,6 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
         depositAmount: values.depositAmount,
         notes: values.notes,
         status: values.status,
-        createdBy: "current-user-id", // In a real app, you'd get this from auth
       });
 
       toast({
