@@ -72,7 +72,7 @@ export function PosSystem() {
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [additionalInfo, setAdditionalInfo] = useState("");
 
-  const menuItems = useQuery(api.menu.getAll);
+  const menuItems = useQuery(api.menu.getAllMenuItems);
   const addOrders = useMutation(api.orders.add);
 
   const itemsPerPage = 5;

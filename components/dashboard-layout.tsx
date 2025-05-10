@@ -11,6 +11,7 @@ import {
   BookOpen,
   ClipboardList,
   DollarSign,
+  FileText,
   Home,
   LogOut,
   Package,
@@ -185,6 +186,7 @@ export default function DashboardLayout({
       href: "/dashboard/admin/expenses",
       icon: DollarSign,
     },
+    { title: "Reports", href: "/dashboard/reports", icon: FileText },
   ];
 
   // Toggle role for demo purposes

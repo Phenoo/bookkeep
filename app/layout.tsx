@@ -30,9 +30,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            {children}
             <Toaster position="bottom-center" />
             <MainToaster />
-            {children}
           </ThemeProvider>
         </ConvexClientProvider>
       </body>

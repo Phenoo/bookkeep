@@ -104,8 +104,25 @@ export default defineSchema({
     createdBy: v.optional(v.string()),
   }).index("by_user", ["createdBy"]),
 
-  // Users table
-
+  // Inventory table
+  inventory: defineTable({
+    name: v.string(),
+    category: v.string(),
+    quantity: v.number(),
+    unit: v.string(),
+    costPerUnit: v.number(),
+    totalValue: v.number(),
+    reorderLevel: v.number(),
+    supplier: v.string(),
+    status: v.string(), // "In Stock", "Low Stock", "Out of Stock"
+    lastUpdated: v.string(), // ISO date string
+    notes: v.optional(v.string()),
+    createdBy: v.optional(v.string()),
+  })
+    .index("by_category", ["category"])
+    .index("by_status", ["status"])
+    .index("by_supplier", ["supplier"])
+    .index("by_user", ["createdBy"]),
   // User activity table
   userActivity: defineTable({
     userId: v.string(),
