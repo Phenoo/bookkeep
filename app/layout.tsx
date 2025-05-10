@@ -1,11 +1,11 @@
-import type React from "react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ConvexClientProvider } from "@/provider/convex-provider";
+import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { Toaster as MainToaster } from "@/components/ui/toaster";
+import { ConvexClientProvider } from "@/provider/convex-provider";
+import { UserSync } from "@/components/user-sync";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +30,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <UserSync />
             {children}
             <Toaster position="bottom-center" />
             <MainToaster />
