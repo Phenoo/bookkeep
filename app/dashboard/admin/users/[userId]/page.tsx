@@ -51,13 +51,15 @@ export default function UserActivityDetailPage() {
   const userId = params.userId as string;
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAction, setFilterAction] = useState("all");
-  const [filterResource, setFilterResource] = useState("all");
   const [dateRange, setDateRange] = useState("all");
-  const [isEmailSending, setIsEmailSending] = useState(false);
 
   // Fetch user activities and user details
-  const activities = useQuery(api.userActivity.getByUserId, { userId }) || [];
   const user = useQuery(api.users.getById, { id: userId as Id<"users"> });
+
+  const clerkId = user?.clerkId;
+
+  const activities =
+    useQuery(api.userActivity.getByUserId, { userId: clerkId || "" }) || [];
 
   // Calculate activity stats
   const totalActivities = activities.length;
@@ -194,41 +196,6 @@ export default function UserActivityDetailPage() {
     document.body.removeChild(link);
   };
 
-  // Send activity report via email
-  //   const handleSendEmail = async () => {
-  //     if (!user) return
-
-  //     setIsEmailSending(true)
-  //     try {
-  //       await sendActivityReport({
-  //         userId: userId,
-  //         userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email || "User",
-  //         userEmail: user.email || "",
-  //         activities: filteredActivities.map((a) => ({
-  //           action: a.action,
-  //           resourceType: a.resourceType,
-  //           details: a.details || "",
-  //           timestamp: a.timestamp,
-  //         })),
-  //       })
-
-  //       toast({
-  //         title: "Email Sent",
-  //         description: `Activity report has been sent to ${user.email}`,
-  //         variant: "default",
-  //       })
-  //     } catch (error) {
-  //       console.error("Error sending email:", error)
-  //       toast({
-  //         title: "Error",
-  //         description: "Failed to send activity report. Please try again.",
-  //         variant: "destructive",
-  //       })
-  //     } finally {
-  //       setIsEmailSending(false)
-  //     }
-  //   }
-
   if (!user) {
     return (
       <div className="flex flex-col gap-4">
@@ -258,19 +225,7 @@ export default function UserActivityDetailPage() {
             User Activity Details
           </h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportToCSV}>
-            <FileDown className="mr-2 h-4 w-4" /> Export
-          </Button>
-          <Button
-            //   onClick={handleSendEmail}
-            disabled={isEmailSending || !user.email}
-            title={!user.email ? "User has no email address" : ""}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            {isEmailSending ? "Sending..." : "Email Report"}
-          </Button>
-        </div>
+        <div className="flex gap-2"></div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

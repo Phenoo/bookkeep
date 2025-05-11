@@ -4,6 +4,12 @@ import { v } from "convex/values";
 // Get all inventory items
 export const getAll = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db.query("inventory").collect();
   },
 });
@@ -12,6 +18,11 @@ export const getAll = query({
 export const getById = query({
   args: { id: v.id("inventory") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db.get(args.id);
   },
 });
@@ -33,6 +44,10 @@ export const add = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const userId = identity?.subject || "anonymous";
 
     const inventoryId = await ctx.db.insert("inventory", {
@@ -45,7 +60,16 @@ export const add = mutation({
       userId,
       action: "create_inventory_item",
       details: `Created inventory item: ${args.name}`,
-      metadata: { inventoryId },
+      category: "inventory",
+      resourceType: "inventory",
+      resourceId: inventoryId,
+      metadata: {
+        inventoryId,
+        itemName: args.name,
+        category: args.category,
+        quantity: args.quantity,
+        totalValue: args.totalValue,
+      },
       timestamp: Date.now(),
     });
 
@@ -75,6 +99,9 @@ export const update = mutation({
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject || "anonymous";
 
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     const existingItem = await ctx.db.get(id);
     if (!existingItem) {
       throw new Error("Inventory item not found");
@@ -87,7 +114,15 @@ export const update = mutation({
       userId,
       action: "update_inventory_item",
       details: `Updated inventory item: ${args.name}`,
-      metadata: { inventoryId: id },
+      category: "inventory",
+      resourceType: "inventory",
+      resourceId: id,
+      metadata: {
+        inventoryId: id,
+        itemName: args.name,
+        previousData: existingItem,
+        newData: updates,
+      },
       timestamp: Date.now(),
     });
 
@@ -102,6 +137,10 @@ export const remove = mutation({
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject || "anonymous";
 
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const existingItem = await ctx.db.get(args.id);
     if (!existingItem) {
       throw new Error("Inventory item not found");
@@ -114,7 +153,14 @@ export const remove = mutation({
       userId,
       action: "delete_inventory_item",
       details: `Deleted inventory item: ${existingItem.name}`,
-      metadata: { inventoryId: args.id },
+      category: "inventory",
+      resourceType: "inventory",
+      resourceId: args.id,
+      metadata: {
+        inventoryId: args.id,
+        itemName: existingItem.name,
+        itemData: existingItem,
+      },
       timestamp: Date.now(),
     });
 

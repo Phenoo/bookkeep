@@ -14,7 +14,7 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between p-4">
           <div className="flex items-center gap-2 font-semibold">
-            <span className="text-xl">GreenVille Apartment</span>
+            <span className="text-base md:text-xl">GreenVille Apartment</span>
           </div>
           <nav className="flex items-center gap-4">
             {isLoading && <Spinner />}

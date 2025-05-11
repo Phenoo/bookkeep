@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -5,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import DashboardLayout from "@/components/dashboard-layout";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -17,20 +17,63 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { formatNaira } from "@/lib/utils";
+import { useUser } from "@clerk/clerk-react";
+import { Spinner } from "@/components/spinner";
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
+  const sales = useQuery(api.sales.getAllSales) || [];
+
+  const { user } = useUser();
+
+  const inventoryItems = useQuery(api.inventory.getAll) || [];
+
+  const users = useQuery(api.users.getAll) || [];
+  const usersActivities = useQuery(api.userActivity.getAll) || [];
+
+  const totalSales = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+
+  const getUser = useQuery(api.users.getByClerkId, {
+    clerkId: user?.id!,
+  });
+
+  const role = getUser?.role;
+
+  if (getUser === null || getUser === undefined || !role) {
+    return <Spinner />;
+  }
+
+  if (role === "user") {
+    return redirect("/dashboard/pos");
+  }
+
+  const salesByCategory = sales.reduce(
+    (acc, sale) => {
+      const category = sale.category || "Uncategorized";
+      if (!acc[category]) {
+        acc[category] = 0;
+      }
+      acc[category] += sale.totalAmount;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  console.log(usersActivities, "actitivds");
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div>
+          <h4 className="font-semibold">Overview</h4>
+        </div>
 
-        <TabsContent value="overview" className="space-y-4">
+        <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -40,8 +83,10 @@ export default function DashboardPage() {
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$12,284.55</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold">
+                  {formatNaira(totalSales)}
+                </div>
+                <p className="text-xs text-muted-foreground  hidden">
                   <span className="text-emerald-500 flex items-center">
                     <ArrowUpIcon className="h-3 w-3 mr-1" />
                     12%
@@ -58,8 +103,10 @@ export default function DashboardPage() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,284</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold">
+                  {inventoryItems.length}
+                </div>
+                <p className="text-xs text-muted-foreground hidden">
                   <span className="text-emerald-500 flex items-center">
                     <ArrowUpIcon className="h-3 w-3 mr-1" />
                     4%
@@ -76,8 +123,10 @@ export default function DashboardPage() {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold">
+                  {usersActivities.length}
+                </div>
+                <p className="text-xs text-muted-foreground hidden">
                   <span className="text-rose-500 flex items-center">
                     <ArrowDownIcon className="h-3 w-3 mr-1" />
                     8%
@@ -94,8 +143,8 @@ export default function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">18</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold">{users.length}</div>
+                <p className="text-xs text-muted-foreground hidden">
                   <span className="text-emerald-500 flex items-center">
                     <ArrowUpIcon className="h-3 w-3 mr-1" />
                     20%
@@ -254,211 +303,56 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">Game Sales</p>
-                      <p className="text-sm font-medium">$4,285.75</p>
+                  {/* djjdjd */}
+                  {Object.keys(salesByCategory).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(salesByCategory).map(
+                        ([category, amount]) => (
+                          <div key={category} className="">
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium capitalize">
+                                  {category} Sales
+                                </p>
+                                <p className="text-sm font-medium">
+                                  {formatNaira(amount)}
+                                </p>
+                              </div>
+                              <div className="h-2 w-full bg-green-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-green-600 rounded-full"
+                                  style={{
+                                    width: `${((amount / totalSales) * 100).toFixed(1)}%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {((amount / totalSales) * 100).toFixed(1)}% of
+                                total sales
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      )}
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <span className="font-bold">Total</span>
+                        <span className="font-bold">
+                          {formatNaira(totalSales)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="h-2 w-full bg-purple-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-purple-600 rounded-full"
-                        style={{ width: "35%" }}
-                      ></div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                      <BarChart3 className="h-12 w-12 mb-2" />
+                      <p>No sales data for this week</p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      35% of total sales
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">Rent Sales</p>
-                      <p className="text-sm font-medium">$5,842.50</p>
-                    </div>
-                    <div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-600 rounded-full"
-                        style={{ width: "48%" }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      48% of total sales
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">Food Sales</p>
-                      <p className="text-sm font-medium">$2,156.30</p>
-                    </div>
-                    <div className="h-2 w-full bg-green-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-600 rounded-full"
-                        style={{ width: "17%" }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      17% of total sales
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">Total Sales</p>
-                      <p className="font-bold">$12,284.55</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="sales" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-700 text-white">
-                <CardTitle>Game Sales</CardTitle>
-                <CardDescription className="text-purple-100">
-                  Track your game sales
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold">$1,284.50</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpIcon className="h-3 w-3 mr-1" />
-                      12%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </div>
-                <Link href="/dashboard/game">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                    Manage Game Sales
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-                <CardTitle>Rent Sales</CardTitle>
-                <CardDescription className="text-blue-100">
-                  Track your rental income
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold">$3,842.75</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-emerald-500 flex items-center">
-                      <ArrowUpIcon className="h-3 w-3 mr-1" />
-                      8%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </div>
-                <Link href="/dashboard/rent">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    Manage Rent Sales
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-green-500 to-green-700 text-white">
-                <CardTitle>Food Sales</CardTitle>
-                <CardDescription className="text-green-100">
-                  Track your food sales
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <div className="text-2xl font-bold">$2,156.30</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-rose-500 flex items-center">
-                      <ArrowDownIcon className="h-3 w-3 mr-1" />
-                      3%
-                    </span>{" "}
-                    from last month
-                  </p>
-                </div>
-                <Link href="/dashboard/food">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    Manage Food Sales
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="inventory" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Items
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,284</div>
-                <p className="text-xs text-muted-foreground">
-                  +12% from last month
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Low Stock Items
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">13</div>
-                <p className="text-xs text-muted-foreground">
-                  -2 from last week
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Out of Stock
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">5</div>
-                <p className="text-xs text-muted-foreground">
-                  +1 from last week
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Inventory Value
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">$124,500</div>
-                <p className="text-xs text-muted-foreground">
-                  +$12,500 from last month
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex justify-end">
-            <Link href="/dashboard/inventory">
-              <Button>View All Inventory</Button>
-            </Link>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }

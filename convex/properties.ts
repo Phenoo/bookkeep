@@ -4,6 +4,11 @@ import { v } from "convex/values";
 // Get all properties
 export const getAll = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db.query("properties").collect();
   },
 });
@@ -12,6 +17,11 @@ export const getAll = query({
 export const getByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db
       .query("properties")
       .filter((q) => q.eq(q.field("createdBy"), args.userId))
@@ -23,6 +33,11 @@ export const getByUser = query({
 export const getById = query({
   args: { id: v.id("properties") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db.get(args.id);
   },
 });
@@ -40,6 +55,14 @@ export const add = mutation({
     createdBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
     return await ctx.db.insert("properties", {
       name: args.name,
       description: args.description,
@@ -48,7 +71,7 @@ export const add = mutation({
       pricePerDay: args.pricePerDay,
       pricePerMonth: args.pricePerMonth,
       isAvailable: args.isAvailable,
-      createdBy: args.createdBy,
+      createdBy: userId,
     });
   },
 });
@@ -75,6 +98,12 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("properties") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db.delete(args.id);
   },
 });

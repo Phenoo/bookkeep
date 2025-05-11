@@ -128,7 +128,10 @@ export default defineSchema({
     userId: v.string(),
     action: v.string(),
     details: v.string(),
+    category: v.optional(v.string()),
     metadata: v.any(),
+    resourceType: v.optional(v.string()),
+    resourceId: v.optional(v.string()),
     timestamp: v.number(),
   })
     .index("by_user_id", ["userId"])
@@ -149,4 +152,15 @@ export default defineSchema({
     .index("by_date", ["date"])
     .index("by_category", ["category"])
     .index("by_created_by", ["createdBy"]),
+
+  // Snooker Coin Transactions table
+  snookerCoinTransactions: defineTable({
+    type: v.string(), // "add" or "use"
+    amount: v.number(),
+    table: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    date: v.string(),
+    totalAmount: v.number(),
+    createdBy: v.string(),
+  }).index("by_date", ["date"]),
 });

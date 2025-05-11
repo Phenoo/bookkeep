@@ -25,6 +25,14 @@ export const createSale = mutation({
     createdBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
     const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const sales = (await ctx.db.query("sales").order("desc").collect()) || [];
@@ -42,20 +50,28 @@ export const createSale = mutation({
       customerEmail: args.customerEmail,
       notes: args.notes,
       saleDate: new Date().toISOString(),
-      createdBy: args.createdBy,
+      createdBy: userId,
       status: "completed",
     });
 
-    // Log user activity if createdBy is provided
-    if (args.createdBy) {
-      await ctx.db.insert("userActivity", {
-        userId: args.createdBy,
-        action: "create",
-        details: `Created sale with order ID: ${orderId}`,
-        metadata: { saleId, totalAmount: args.totalAmount },
-        timestamp: Date.now(),
-      });
-    }
+    // Log user activity
+    await ctx.db.insert("userActivity", {
+      userId: userId,
+      action: "create_sale",
+      details: `Created sale with order ID: ${orderId}`,
+      category: "sales",
+      resourceType: "sale",
+      resourceId: saleId,
+      metadata: {
+        saleId,
+        orderId,
+        totalAmount: args.totalAmount,
+        items: args.items,
+        customerName: args.customerName,
+        paymentMethod: args.paymentMethod,
+      },
+      timestamp: Date.now(),
+    });
 
     return { saleId, orderId };
   },
@@ -64,6 +80,12 @@ export const createSale = mutation({
 // Get all sales
 export const getAllSales = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db.query("sales").collect();
   },
 });
@@ -77,6 +99,11 @@ export const getSalesByDateRange = query({
   handler: async (ctx, args) => {
     const { startDate, endDate } = args;
 
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db
       .query("sales")
       .filter((q) =>
@@ -129,9 +156,18 @@ export const updateSaleStatus = mutation({
     if (updatedBy) {
       await ctx.db.insert("userActivity", {
         userId: updatedBy,
-        action: "update",
+        action: "update_sale",
         details: `Updated sale status to ${status}`,
-        metadata: { saleId, previousStatus: sale.status },
+        category: "sales",
+        resourceType: "sale",
+        resourceId: saleId,
+        metadata: {
+          saleId,
+          orderId: sale.orderId,
+          previousStatus: sale.status,
+          newStatus: status,
+          notes: notes,
+        },
         timestamp: Date.now(),
       });
     }

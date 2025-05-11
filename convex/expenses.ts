@@ -17,6 +17,14 @@ export const createExpense = mutation({
     recurringFrequency: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
     const expenseId = await ctx.db.insert("expenses", {
       title: args.title,
       amount: args.amount,
@@ -26,17 +34,27 @@ export const createExpense = mutation({
       receipt: args.receipt,
       notes: args.notes,
       vendor: args.vendor,
-      createdBy: args.createdBy,
+      createdBy: userId,
       isRecurring: args.isRecurring || false,
       recurringFrequency: args.recurringFrequency,
     });
 
     // Log user activity
     await ctx.db.insert("userActivity", {
-      userId: args.createdBy,
-      action: "create",
+      userId: userId,
+      action: "create_expense",
       details: `Created expense: ${args.title}`,
-      metadata: { expenseId, amount: args.amount, category: args.category },
+      category: "expenses",
+      resourceType: "expense",
+      resourceId: expenseId,
+      metadata: {
+        expenseId,
+        title: args.title,
+        amount: args.amount,
+        category: args.category,
+        vendor: args.vendor,
+        isRecurring: args.isRecurring,
+      },
       timestamp: Date.now(),
     });
 
@@ -47,6 +65,12 @@ export const createExpense = mutation({
 // Get all expenses
 export const getAllExpenses = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db.query("expenses").collect();
   },
 });
@@ -59,6 +83,12 @@ export const getExpensesByDateRange = query({
   },
   handler: async (ctx, args) => {
     const { startDate, endDate } = args;
+
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
 
     return await ctx.db
       .query("expenses")
@@ -78,6 +108,12 @@ export const getExpensesByCategory = query({
     category: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db
       .query("expenses")
       .filter((q) => q.eq(q.field("category"), args.category))
@@ -91,6 +127,11 @@ export const getExpensesByUser = query({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db
       .query("expenses")
       .filter((q) => q.eq(q.field("createdBy"), args.userId))
@@ -117,6 +158,12 @@ export const updateExpense = mutation({
   handler: async (ctx, args) => {
     const { id, updatedBy, ...updateData } = args;
 
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     // Get the current expense
     const expense = await ctx.db.get(id);
     if (!expense) {
@@ -129,9 +176,17 @@ export const updateExpense = mutation({
     // Log user activity
     await ctx.db.insert("userActivity", {
       userId: updatedBy,
-      action: "update",
+      action: "update_expense",
       details: `Updated expense: ${expense.title}`,
-      metadata: { expenseId: id, previousData: expense, newData: updateData },
+      category: "expenses",
+      resourceType: "expense",
+      resourceId: id,
+      metadata: {
+        expenseId: id,
+        title: expense.title,
+        previousData: expense,
+        newData: updateData,
+      },
       timestamp: Date.now(),
     });
 
@@ -148,6 +203,12 @@ export const deleteExpense = mutation({
   handler: async (ctx, args) => {
     const { id, deletedBy } = args;
 
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     // Get the expense before deleting
     const expense = await ctx.db.get(id);
     if (!expense) {
@@ -160,9 +221,18 @@ export const deleteExpense = mutation({
     // Log user activity
     await ctx.db.insert("userActivity", {
       userId: deletedBy,
-      action: "delete",
+      action: "delete_expense",
       details: `Deleted expense: ${expense.title}`,
-      metadata: { expenseId: id, expenseData: expense },
+      category: "expenses",
+      resourceType: "expense",
+      resourceId: id,
+      metadata: {
+        expenseId: id,
+        title: expense.title,
+        amount: expense.amount,
+        category: expense.category,
+        vendor: expense.vendor,
+      },
       timestamp: Date.now(),
     });
 

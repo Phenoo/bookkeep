@@ -191,7 +191,7 @@ export default function ActivityPage() {
                       Details
                     </TableHead>
                     <TableHead>Time</TableHead>
-                    <TableHead className="w-[80px]">View</TableHead>
+                    {/* <TableHead className="w-[80px]">View</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -223,12 +223,12 @@ export default function ActivityPage() {
                             })}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <Button variant="ghost" size="icon">
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">View details</span>
                           </Button>
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     ))
                   ) : (

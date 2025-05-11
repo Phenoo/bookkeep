@@ -27,6 +27,12 @@ export const getMenuItemsByUser = query({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     return await ctx.db
       .query("menuItems")
       .filter((q) => q.eq(q.field("createdBy"), args.userId))
@@ -55,13 +61,20 @@ export const createMenuItem = mutation({
     createdBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+    const userId = identity.subject;
+
     const menuItemId = await ctx.db.insert("menuItems", {
       name: args.name,
       price: args.price,
       category: args.category,
       image: args.image,
       description: args.description,
-      createdBy: args.createdBy,
+      createdBy: userId,
     });
 
     return { menuItemId };

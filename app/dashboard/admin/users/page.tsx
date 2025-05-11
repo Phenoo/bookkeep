@@ -154,7 +154,7 @@ export default function UsersPage() {
   };
 
   const viewUserDetails = (userId: string) => {
-    router.push(`/dashboard/users/${userId}`);
+    router.push(`/dashboard/admin/users/${userId}`);
   };
   return (
     <>

@@ -11,9 +11,34 @@ import {
 } from "@/components/ui/card";
 import { PropertiesManager } from "./_components/properties-manager";
 import { MenuItemsManager } from "./_components/menu-items-manager";
+import { redirect } from "next/navigation";
+import { Spinner } from "@/components/spinner";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useUser } from "@clerk/clerk-react";
 
 export default function ManagePage() {
   const [activeTab, setActiveTab] = useState("properties");
+
+  const { user } = useUser();
+
+  const getUser = useQuery(api.users.getByClerkId, {
+    clerkId: user?.id!,
+  });
+
+  const role = getUser?.role;
+
+  if (getUser === undefined || getUser === null) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Spinner size={"lg"} />
+      </div>
+    );
+  }
+
+  if (role === "user") {
+    return redirect("/dashboard/pos");
+  }
 
   return (
     <div className="container mx-auto py-6">

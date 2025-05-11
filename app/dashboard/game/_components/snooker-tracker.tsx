@@ -63,15 +63,21 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { cn, formatNaira } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useToast } from "@/hooks/use-toast";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface SnookerTransaction {
-  id: string;
-  date: Date;
-  type: "add" | "use";
+  _id: Id<"snookerCoinTransactions">;
+  _creationTime: number;
+  type: string;
   amount: number;
-  table: string;
-  notes: string;
+  table?: string;
+  notes?: string;
+  date: string;
   totalAmount: number;
+  createdBy: string;
 }
 
 const formSchema = z.object({
@@ -91,18 +97,19 @@ const settingsSchema = z.object({
 });
 
 export function SnookerCoinsTracker() {
-  const [totalCoins, setTotalCoins] = useState(500);
+  const { toast } = useToast();
   const [pricePerCoin, setPricePerCoin] = useState(2); // Default price per coin: $2
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [transactions, setTransactions] = useState<SnookerTransaction[]>([]);
+  const [totalCoins, setTotalCoins] = useState(500);
 
-  // Calculate initial total revenue
-  useState(() => {
-    const revenue = transactions
-      .filter((t) => t.type === "use")
-      .reduce((sum, t) => sum + t.totalAmount, 0);
-    setTotalRevenue(revenue);
-  });
+  // Get transactions from database
+  const transactions = useQuery(api.snooker_coins.getAllTransactions) || [];
+
+  // Calculate total coins and revenue
+  const totalRevenue = transactions
+    .filter((t) => t.type === "use")
+    .reduce((sum, t) => sum + t.totalAmount, 0);
+
+  const createTransaction = useMutation(api.snooker_coins.createTransaction);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -122,66 +129,63 @@ export function SnookerCoinsTracker() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const totalAmount = values.amount * pricePerCoin;
 
-    const newTransaction: SnookerTransaction = {
-      id: `t${transactions.length + 1}-${Date.now()}`,
-      date: values.date,
-      type: values.type,
-      amount: values.amount,
-      table: values.table || "",
-      notes: values.notes || "",
-      totalAmount,
-    };
+    try {
+      // Create transaction in database
+      await createTransaction({
+        type: values.type,
+        amount: values.amount,
+        table: values.table || undefined,
+        notes: values.notes || undefined,
+        date: values.date.toISOString(),
+        totalAmount,
+      });
 
-    // Update total coins
-    if (values.type === "add") {
-      setTotalCoins((prev) => prev + values.amount);
-    } else {
-      // Check if we have enough coins
-      if (totalCoins < values.amount) {
-        form.setError("amount", {
-          type: "manual",
-          message: "Not enough coins available",
-        });
-        return;
+      // Update local state
+      if (values.type === "add") {
+        setTotalCoins((prev) => prev + values.amount);
+      } else {
+        // Check if we have enough coins
+        if (totalCoins < values.amount) {
+          form.setError("amount", {
+            type: "manual",
+            message: "Not enough coins available",
+          });
+          return;
+        }
+        setTotalCoins((prev) => prev - values.amount);
       }
-      setTotalCoins((prev) => prev - values.amount);
 
-      // Update revenue for "use" transactions
-      setTotalRevenue((prev) => prev + totalAmount);
+      // Reset form
+      form.reset({
+        type: "add",
+        amount: 0,
+        table: "",
+        notes: "",
+        date: new Date(),
+      });
+
+      toast({
+        title: "Success",
+        description: "Transaction recorded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to record transaction",
+        variant: "destructive",
+      });
     }
-
-    // Add transaction to history
-    setTransactions((prev) => [newTransaction, ...prev]);
-
-    // Reset form
-    form.reset({
-      type: "add",
-      amount: 0,
-      table: "",
-      notes: "",
-      date: new Date(),
-    });
   }
 
   function updateSettings(values: z.infer<typeof settingsSchema>) {
     setPricePerCoin(values.pricePerCoin);
-
-    // Recalculate all transaction amounts with new price
-    const updatedTransactions = transactions.map((transaction) => ({
-      ...transaction,
-      totalAmount: transaction.amount * values.pricePerCoin,
-    }));
-
-    setTransactions(updatedTransactions);
-
-    // Recalculate total revenue
-    const newRevenue = updatedTransactions
-      .filter((t) => t.type === "use")
-      .reduce((sum, t) => sum + t.totalAmount, 0);
-    setTotalRevenue(newRevenue);
+    toast({
+      title: "Success",
+      description: "Settings updated successfully",
+    });
   }
 
   return (
@@ -422,6 +426,7 @@ export function SnookerCoinsTracker() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Coins</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Table</TableHead>
@@ -437,14 +442,24 @@ export function SnookerCoinsTracker() {
                     </TableRow>
                   ) : (
                     transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
+                      <TableRow key={transaction._id}>
                         <TableCell>
-                          {format(transaction.date, "MMM d, yyyy")}
+                          {format(new Date(transaction.date), "MMM d, yyyy")}
                         </TableCell>
-
+                        <TableCell>
+                          <Badge
+                            variant={
+                              transaction.type === "add"
+                                ? "default"
+                                : "destructive"
+                            }
+                          >
+                            {transaction.type === "add" ? "Added" : "Used"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{transaction.amount}</TableCell>
                         <TableCell>
-                          ${transaction.totalAmount.toFixed(2)}
+                          {formatNaira(transaction.totalAmount)}
                         </TableCell>
                         <TableCell>{transaction.table || "-"}</TableCell>
                         <TableCell className="max-w-[150px] truncate">
@@ -460,7 +475,7 @@ export function SnookerCoinsTracker() {
           <CardFooter className="flex justify-between">
             <div>
               <p className="text-sm font-medium">
-                Price per coin: ${pricePerCoin.toFixed(2)}
+                Total Revenue: {formatNaira(totalRevenue)}
               </p>
             </div>
             <Button variant="outline">Export Transactions</Button>

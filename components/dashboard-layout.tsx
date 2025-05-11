@@ -48,15 +48,28 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { InventoryAlerts } from "./inventory-alerts";
 
+// Add color generation function
+const getRandomColor = () => {
+  const colors = [
+    "text-blue-500",
+    "text-purple-500",
+    "text-pink-500",
+    "text-indigo-500",
+    "text-cyan-500",
+    "text-orange-500",
+    "text-teal-500",
+    "text-rose-500",
+    "text-violet-500",
+    "text-emerald-500",
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  userRole?: "admin" | "user";
 }
 
-export default function DashboardLayout({
-  children,
-  userRole = "user",
-}: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
 
   const { user } = useUser();
@@ -66,23 +79,25 @@ export default function DashboardLayout({
   });
 
   const role = getUser?.role;
+  // Add type for menu items
+  type MenuItem = {
+    title: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }> | (() => JSX.Element);
+  };
+
   // Common navigation items
-  const dashboardItems = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: Home,
-    },
+  const dashboardItems: MenuItem[] = [
+    { title: "Expenses", href: "/dashboard/expenses", icon: DollarSign },
+  ];
+
+  // Sales tracking items
+  const salesItems: MenuItem[] = [
     {
       title: "Point of Sale",
       href: "/dashboard/pos",
       icon: ShoppingCart,
     },
-    { title: "Expenses", href: "/dashboard/expenses", icon: DollarSign },
-  ];
-
-  // Sales tracking items
-  const salesItems = [
     {
       title: "Game Sales",
       href: "/dashboard/game",
@@ -158,7 +173,7 @@ export default function DashboardLayout({
   ];
 
   // Book keeping items
-  const bookkeepingItems = [
+  const bookkeepingItems: MenuItem[] = [
     {
       title: "Inventory",
       href: "/dashboard/inventory",
@@ -171,13 +186,13 @@ export default function DashboardLayout({
     },
     {
       title: "Audit Logs",
-      href: "/dashboard/records",
+      href: "/dashboard/admin/records",
       icon: BookOpen,
     },
   ];
 
   // Admin-only navigation items
-  const adminItems = [
+  const adminItems: MenuItem[] = [
     {
       title: "Users",
       href: "/dashboard/admin/users",
@@ -196,6 +211,12 @@ export default function DashboardLayout({
     { title: "Reports", href: "/dashboard/reports", icon: FileText },
   ];
 
+  // Generate colors for each section
+  const mainColor = getRandomColor();
+  const salesColor = getRandomColor();
+  const bookkeepingColor = getRandomColor();
+  const adminColor = getRandomColor();
+
   // Toggle role for demo purposes
 
   return (
@@ -212,30 +233,48 @@ export default function DashboardLayout({
             </Link>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Main</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {dashboardItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
+            {(role === "admin" || role === "manager") && (
+              <SidebarGroup>
+                <SidebarGroupLabel className={mainColor}>
+                  Main
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
-                        isActive={pathname === item.href}
-                        tooltip={item.title}
+                        isActive={pathname === ""}
+                        tooltip={"Dashboard"}
                       >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                        <Link href={"/dashboard"}>
+                          <Home className="h-4 w-4" />
+                          <span>{"Dashboard"}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+                    {dashboardItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                          tooltip={item.title}
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             <SidebarGroup>
-              <SidebarGroupLabel>Sales Tracking</SidebarGroupLabel>
+              <SidebarGroupLabel className={salesColor}>
+                Sales Tracking
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {salesItems.map((item) => (
@@ -260,31 +299,37 @@ export default function DashboardLayout({
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarGroup>
-              <SidebarGroupLabel>Book Keeping</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {bookkeepingItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                        tooltip={item.title}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {(role === "admin" || role === "manager") && (
+              <SidebarGroup>
+                <SidebarGroupLabel className={bookkeepingColor}>
+                  Book Keeping
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {bookkeepingItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                          tooltip={item.title}
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             {role === "admin" && (
               <SidebarGroup>
-                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarGroupLabel className={adminColor}>
+                  Administration
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {adminItems.map((item) => (
@@ -308,52 +353,23 @@ export default function DashboardLayout({
           </SidebarContent>
           <SidebarFooter className="border-t p-4">
             <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex w-full items-center gap-2 px-2"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                      <AvatarFallback>
-                        {role === "admin" ? "AD" : "US"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-1 flex-col items-start text-sm">
-                      <span className="font-medium">
-                        {role === "admin" ? "Admin User" : "Regular User"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {role === "admin" ? "Administrator" : "User"}
-                      </span>
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Switch to {role === "admin" ? "User" : "Admin"}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                className="flex w-full items-center gap-2 px-2"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                  <AvatarFallback>
+                    {role === "admin" ? "AD" : role === "manager" ? "MD" : "US"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-1 flex-col items-start text-sm">
+                  <span className="font-medium capitalize">{role}</span>
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {role === "admin" ? "Administrator" : role}
+                  </span>
+                </div>
+              </Button>
             </div>
           </SidebarFooter>
         </Sidebar>

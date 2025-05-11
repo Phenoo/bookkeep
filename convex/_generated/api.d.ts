@@ -23,6 +23,7 @@ import type * as orders from "../orders.js";
 import type * as properties from "../properties.js";
 import type * as sales from "../sales.js";
 import type * as seed from "../seed.js";
+import type * as snooker_coins from "../snooker_coins.js";
 import type * as userActivity from "../userActivity.js";
 import type * as users from "../users.js";
 
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   properties: typeof properties;
   sales: typeof sales;
   seed: typeof seed;
+  snooker_coins: typeof snooker_coins;
   userActivity: typeof userActivity;
   users: typeof users;
 }>;

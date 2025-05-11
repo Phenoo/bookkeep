@@ -15,14 +15,7 @@ export default function UserActivityDetailLoading() {
             User Activity Details
           </h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" disabled>
-            <Skeleton className="h-4 w-4 mr-2" /> Export
-          </Button>
-          <Button disabled>
-            <Skeleton className="h-4 w-4 mr-2" /> Email Report
-          </Button>
-        </div>
+        <div className="flex gap-2"></div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

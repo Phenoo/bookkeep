@@ -40,6 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { MoreHorizontal, Search, Filter, Download } from "lucide-react";
 import { format } from "date-fns";
+import { formatNaira } from "@/lib/utils";
 
 export function RevenueTable() {
   const { toast } = useToast();
@@ -238,7 +239,7 @@ export function RevenueTable() {
                           </TableCell>
                           <TableCell>{sale.items.length} items</TableCell>
                           <TableCell className="text-right">
-                            {formatPrice(sale.totalAmount)}
+                            {formatNaira(sale.totalAmount)}
                           </TableCell>
                           <TableCell>{sale.paymentMethod || "—"}</TableCell>
                           <TableCell>{getStatusBadge(sale.status)}</TableCell>
@@ -339,7 +340,7 @@ export function RevenueTable() {
                     </p>
                     <p>
                       <span className="font-medium">Total:</span>{" "}
-                      {formatPrice(selectedSale.totalAmount)}
+                      {formatNaira(selectedSale.totalAmount)}
                     </p>
                     <p>
                       <span className="font-medium">Category:</span>{" "}
@@ -371,13 +372,13 @@ export function RevenueTable() {
                           </TableCell>
                           <TableCell>{item.category}</TableCell>
                           <TableCell className="text-right">
-                            {formatPrice(item.price)}
+                            {formatNaira(item.price)}
                           </TableCell>
                           <TableCell className="text-right">
                             {item.quantity}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatPrice(item.subtotal)}
+                            {formatNaira(item.subtotal)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -386,7 +387,7 @@ export function RevenueTable() {
                           Total
                         </TableCell>
                         <TableCell className="text-right font-bold">
-                          {formatPrice(selectedSale.totalAmount)}
+                          {formatNaira(selectedSale.totalAmount)}
                         </TableCell>
                       </TableRow>
                     </TableBody>

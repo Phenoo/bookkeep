@@ -63,6 +63,9 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatNaira } from "@/lib/utils";
+import { Spinner } from "@/components/spinner";
+import { redirect } from "next/navigation";
+import { useUser } from "@clerk/clerk-react";
 
 // Define inventory item type
 type InventoryItem = {
@@ -89,6 +92,11 @@ export default function InventoryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<InventoryItem | null>(null);
 
+  const { user } = useUser();
+
+  const getUser = useQuery(api.users.getByClerkId, {
+    clerkId: user?.id!,
+  });
   // Form state
   const [formData, setFormData] = useState({
     name: "",
@@ -348,6 +356,20 @@ export default function InventoryPage() {
         return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
   };
+
+  const role = getUser?.role;
+
+  if (getUser === undefined || getUser === null) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Spinner size={"lg"} />
+      </div>
+    );
+  }
+
+  if (role === "user") {
+    return redirect("/dashboard/pos");
+  }
 
   return (
     <>

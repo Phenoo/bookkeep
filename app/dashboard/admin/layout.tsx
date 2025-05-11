@@ -1,6 +1,5 @@
 "use client";
-import DashboardLayout from "@/components/dashboard-layout";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import React from "react";
 
 import { redirect } from "next/navigation";
@@ -13,8 +12,6 @@ interface DashboardLayoutProps {
 }
 
 const AdminMainDashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { isAuthenticated, isLoading } = useConvexAuth();
-
   const { user } = useUser();
 
   const getUser = useQuery(api.users.getByClerkId, {
@@ -23,7 +20,7 @@ const AdminMainDashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const role = getUser?.role;
 
-  if (isLoading) {
+  if (getUser === undefined || getUser === null) {
     return (
       <div className="h-full flex items-center justify-center">
         <Spinner size={"lg"} />
@@ -31,8 +28,8 @@ const AdminMainDashboardLayout = ({ children }: DashboardLayoutProps) => {
     );
   }
 
-  if (role === "user") {
-    return redirect("/dashboard");
+  if (role === "user" || role === "manager") {
+    return redirect("/dashboard/pos");
   }
 
   return <>{children}</>;

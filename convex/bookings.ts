@@ -4,6 +4,11 @@ import { v } from "convex/values";
 // Get all bookings
 export const getAll = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
     return await ctx.db.query("bookings").order("desc").collect();
   },
 });
@@ -59,6 +64,26 @@ export const add = mutation({
       notes: args.notes,
       status: args.status,
       createdBy: userId,
+    });
+
+    // Log user activity
+    await ctx.db.insert("userActivity", {
+      userId,
+      action: "create_booking",
+      details: `Created booking for ${args.customerName} at ${args.propertyName}`,
+      category: "bookings",
+      resourceType: "booking",
+      resourceId: bookingId,
+      metadata: {
+        bookingId,
+        customerName: args.customerName,
+        propertyName: args.propertyName,
+        startDate: args.startDate,
+        endDate: args.endDate,
+        amount: args.amount,
+        status: args.status,
+      },
+      timestamp: Date.now(),
     });
 
     const sales = (await ctx.db.query("sales").order("desc").collect()) || [];
@@ -119,11 +144,37 @@ export const update = mutation({
     if (!identity) {
       throw new Error("Not authenticated");
     }
+    const userId = identity?.subject || "anonymous";
     const { id, ...rest } = args;
 
-    const booking = await ctx.db.patch(id, rest);
+    // Get the current booking
+    const existingBooking = await ctx.db.get(id);
+    if (!existingBooking) {
+      throw new Error("Booking not found");
+    }
 
-    return booking;
+    // Update the booking
+    await ctx.db.patch(id, rest);
+
+    // Log user activity
+    await ctx.db.insert("userActivity", {
+      userId,
+      action: "update_booking",
+      details: `Updated booking for ${existingBooking.customerName} at ${existingBooking.propertyName}`,
+      category: "bookings",
+      resourceType: "booking",
+      resourceId: id,
+      metadata: {
+        bookingId: id,
+        customerName: existingBooking.customerName,
+        propertyName: existingBooking.propertyName,
+        previousData: existingBooking,
+        newData: rest,
+      },
+      timestamp: Date.now(),
+    });
+
+    return id;
   },
 });
 
@@ -136,9 +187,34 @@ export const remove = mutation({
     if (!identity) {
       throw new Error("Not authenticated");
     }
+    const userId = identity?.subject || "anonymous";
 
-    const existingBooking = await ctx.db.delete(args.id);
+    // Get the booking before deleting
+    const existingBooking = await ctx.db.get(args.id);
+    if (!existingBooking) {
+      throw new Error("Booking not found");
+    }
 
-    return existingBooking;
+    // Delete the booking
+    await ctx.db.delete(args.id);
+
+    // Log user activity
+    await ctx.db.insert("userActivity", {
+      userId,
+      action: "delete_booking",
+      details: `Deleted booking for ${existingBooking.customerName} at ${existingBooking.propertyName}`,
+      category: "bookings",
+      resourceType: "booking",
+      resourceId: args.id,
+      metadata: {
+        bookingId: args.id,
+        customerName: existingBooking.customerName,
+        propertyName: existingBooking.propertyName,
+        bookingData: existingBooking,
+      },
+      timestamp: Date.now(),
+    });
+
+    return args.id;
   },
 });
