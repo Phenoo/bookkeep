@@ -74,7 +74,7 @@ export function OrderFiltersDialog({
               mode="range"
               selected={localDateRange}
               onSelect={setLocalDateRange as any}
-              className="border rounded-md"
+              className="border rounded-md w-full"
             />
           </div>
 

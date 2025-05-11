@@ -33,23 +33,49 @@ import {
   subWeeks,
   isWithinInterval,
   parseISO,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  subMonths,
+  startOfYear,
+  endOfYear,
+  addYears,
+  subYears,
+  getYear,
+  getMonth,
 } from "date-fns";
 import { CalendarIcon, FileDown, BarChart3, PieChart } from "lucide-react";
-import DashboardLayout from "@/components/dashboard-layout";
 import { formatNaira } from "@/lib/utils";
 
 export default function ReportsPage() {
-  const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
+  // Add period type state
+  const [periodType, setPeriodType] = useState<"weekly" | "monthly" | "yearly">(
+    "weekly"
+  );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [reportType, setReportType] = useState<
     "sales" | "expenses" | "combined"
   >("combined");
 
-  // Calculate week start and end dates
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // Start on Monday
-  const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 }); // End on Sunday
+  // Calculate period start and end dates based on period type
+  let periodStart: Date;
+  let periodEnd: Date;
+  let periodRangeDisplay: string;
 
-  // Format dates for display
-  const weekRangeDisplay = `${format(weekStart, "MMM d, yyyy")} - ${format(weekEnd, "MMM d, yyyy")}`;
+  if (periodType === "weekly") {
+    periodStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Start on Monday
+    periodEnd = endOfWeek(selectedDate, { weekStartsOn: 1 }); // End on Sunday
+    periodRangeDisplay = `${format(periodStart, "MMM d, yyyy")} - ${format(periodEnd, "MMM d, yyyy")}`;
+  } else if (periodType === "monthly") {
+    periodStart = startOfMonth(selectedDate);
+    periodEnd = endOfMonth(selectedDate);
+    periodRangeDisplay = format(selectedDate, "MMMM yyyy");
+  } else {
+    // yearly
+    periodStart = startOfYear(selectedDate);
+    periodEnd = endOfYear(selectedDate);
+    periodRangeDisplay = format(selectedDate, "yyyy");
+  }
 
   // Fetch sales data
   const salesData = useQuery(api.sales.getAllSales) || [];
@@ -57,27 +83,33 @@ export default function ReportsPage() {
   // Fetch expenses data
   const expensesData = useQuery(api.expenses.getAllExpenses) || [];
 
-  // Filter data for the selected week
-  const weekSales = salesData.filter((sale) => {
+  // Filter data for the selected period
+  const periodSales = salesData.filter((sale) => {
     const saleDate = parseISO(sale.saleDate);
-    return isWithinInterval(saleDate, { start: weekStart, end: weekEnd });
+    return isWithinInterval(saleDate, { start: periodStart, end: periodEnd });
   });
 
-  const weekExpenses = expensesData.filter((expense) => {
+  const periodExpenses = expensesData.filter((expense) => {
     const expenseDate = parseISO(expense.date);
-    return isWithinInterval(expenseDate, { start: weekStart, end: weekEnd });
+    return isWithinInterval(expenseDate, {
+      start: periodStart,
+      end: periodEnd,
+    });
   });
 
   // Calculate totals
-  const totalSales = weekSales.reduce((sum, sale) => sum + sale.totalAmount, 0);
-  const totalExpenses = weekExpenses.reduce(
+  const totalSales = periodSales.reduce(
+    (sum, sale) => sum + sale.totalAmount,
+    0
+  );
+  const totalExpenses = periodExpenses.reduce(
     (sum, expense) => sum + expense.amount,
     0
   );
   const netProfit = totalSales - totalExpenses;
 
   // Group sales by category
-  const salesByCategory = weekSales.reduce(
+  const salesByCategory = periodSales.reduce(
     (acc, sale) => {
       const category = sale.category || "Uncategorized";
       if (!acc[category]) {
@@ -90,7 +122,7 @@ export default function ReportsPage() {
   );
 
   // Group expenses by category
-  const expensesByCategory = weekExpenses.reduce(
+  const expensesByCategory = periodExpenses.reduce(
     (acc, expense) => {
       if (!acc[expense.category]) {
         acc[expense.category] = 0;
@@ -101,20 +133,35 @@ export default function ReportsPage() {
     {} as Record<string, number>
   );
 
-  // Navigate to previous week
-  const goToPreviousWeek = () => {
-    setSelectedWeek(subWeeks(selectedWeek, 1));
+  // Navigation functions for different period types
+  const goToPreviousPeriod = () => {
+    if (periodType === "weekly") {
+      setSelectedDate(subWeeks(selectedDate, 1));
+    } else if (periodType === "monthly") {
+      setSelectedDate(subMonths(selectedDate, 1));
+    } else {
+      // yearly
+      setSelectedDate(subYears(selectedDate, 1));
+    }
   };
 
-  // Navigate to next week
-  const goToNextWeek = () => {
-    setSelectedWeek(addWeeks(selectedWeek, 1));
+  const goToNextPeriod = () => {
+    if (periodType === "weekly") {
+      setSelectedDate(addWeeks(selectedDate, 1));
+    } else if (periodType === "monthly") {
+      setSelectedDate(addMonths(selectedDate, 1));
+    } else {
+      // yearly
+      setSelectedDate(addYears(selectedDate, 1));
+    }
   };
 
   // Export report to CSV
   const exportToCSV = () => {
     let csvContent = "";
     let filename = "";
+    const periodTypeCapitalized =
+      periodType.charAt(0).toUpperCase() + periodType.slice(1);
 
     if (reportType === "sales" || reportType === "combined") {
       // Sales report
@@ -128,7 +175,7 @@ export default function ReportsPage() {
         "Payment Method",
         "Status",
       ];
-      const salesRows = weekSales.map((sale) => [
+      const salesRows = periodSales.map((sale) => [
         sale.saleDate,
         sale.orderId,
         sale.category || "Uncategorized",
@@ -139,8 +186,8 @@ export default function ReportsPage() {
         sale.status,
       ]);
 
-      csvContent += "SALES REPORT\n";
-      csvContent += `Week: ${weekRangeDisplay}\n\n`;
+      csvContent += `SALES REPORT (${periodTypeCapitalized})\n`;
+      csvContent += `Period: ${periodRangeDisplay}\n\n`;
       csvContent += salesHeaders.join(",") + "\n";
       csvContent += salesRows
         .map((row) => row.map((cell) => `"${cell}"`).join(","))
@@ -162,7 +209,7 @@ export default function ReportsPage() {
         "Payment Method",
         "Notes",
       ];
-      const expensesRows = weekExpenses.map((expense) => [
+      const expensesRows = periodExpenses.map((expense) => [
         expense.date,
         expense.title,
         expense.category,
@@ -172,8 +219,8 @@ export default function ReportsPage() {
         expense.notes || "",
       ]);
 
-      csvContent += "EXPENSES REPORT\n";
-      csvContent += `Week: ${weekRangeDisplay}\n\n`;
+      csvContent += `EXPENSES REPORT (${periodTypeCapitalized})\n`;
+      csvContent += `Period: ${periodRangeDisplay}\n\n`;
       csvContent += expensesHeaders.join(",") + "\n";
       csvContent += expensesRows
         .map((row) => row.map((cell) => `"${cell}"`).join(","))
@@ -183,13 +230,23 @@ export default function ReportsPage() {
     if (reportType === "combined") {
       // Summary
       csvContent += "\n\nSUMMARY\n";
-      csvContent += `Total Sales: $${totalSales.toFixed(2)}\n`;
-      csvContent += `Total Expenses: $${totalExpenses.toFixed(2)}\n`;
-      csvContent += `Net Profit: $${netProfit.toFixed(2)}\n`;
+      csvContent += `Total Sales: ${formatNaira(totalSales)}\n`;
+      csvContent += `Total Expenses: ${formatNaira(totalExpenses)}\n`;
+      csvContent += `Net Profit: ${formatNaira(netProfit)}\n`;
     }
 
-    // Set filename based on report type
-    filename = `${reportType}_report_${format(weekStart, "yyyy-MM-dd")}_to_${format(weekEnd, "yyyy-MM-dd")}.csv`;
+    // Set filename based on report type and period
+    let periodForFilename = "";
+    if (periodType === "weekly") {
+      periodForFilename = `${format(periodStart, "yyyy-MM-dd")}_to_${format(periodEnd, "yyyy-MM-dd")}`;
+    } else if (periodType === "monthly") {
+      periodForFilename = format(selectedDate, "yyyy-MM");
+    } else {
+      // yearly
+      periodForFilename = format(selectedDate, "yyyy");
+    }
+
+    filename = `${reportType}_${periodType}_report_${periodForFilename}.csv`;
 
     // Create download link
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -203,41 +260,220 @@ export default function ReportsPage() {
     document.body.removeChild(link);
   };
 
+  // Get appropriate title based on period type
+  const getPageTitle = () => {
+    switch (periodType) {
+      case "weekly":
+        return "Weekly Reports";
+      case "monthly":
+        return "Monthly Reports";
+      case "yearly":
+        return "Yearly Reports";
+      default:
+        return "Reports";
+    }
+  };
+
+  // Render date selector based on period type
+  const renderDateSelector = () => {
+    if (periodType === "weekly") {
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="min-w-[240px] justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {periodRangeDisplay}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    } else if (periodType === "monthly") {
+      // For monthly, we'll show a month picker
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="min-w-[180px] justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {periodRangeDisplay}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <div className="p-2">
+              <Select
+                value={String(getMonth(selectedDate))}
+                onValueChange={(value) => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setMonth(Number.parseInt(value));
+                  setSelectedDate(newDate);
+                }}
+              >
+                <SelectTrigger className="w-[180px] mb-2">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">January</SelectItem>
+                  <SelectItem value="1">February</SelectItem>
+                  <SelectItem value="2">March</SelectItem>
+                  <SelectItem value="3">April</SelectItem>
+                  <SelectItem value="4">May</SelectItem>
+                  <SelectItem value="5">June</SelectItem>
+                  <SelectItem value="6">July</SelectItem>
+                  <SelectItem value="7">August</SelectItem>
+                  <SelectItem value="8">September</SelectItem>
+                  <SelectItem value="9">October</SelectItem>
+                  <SelectItem value="10">November</SelectItem>
+                  <SelectItem value="11">December</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={String(getYear(selectedDate))}
+                onValueChange={(value) => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setFullYear(Number.parseInt(value));
+                  setSelectedDate(newDate);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const year = new Date().getFullYear() - 2 + i;
+                    return (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </PopoverContent>
+        </Popover>
+      );
+    } else {
+      // yearly
+      // For yearly, we'll show a year picker
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="min-w-[120px] justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {periodRangeDisplay}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <div className="p-2">
+              <Select
+                value={String(getYear(selectedDate))}
+                onValueChange={(value) => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setFullYear(Number.parseInt(value));
+                  setSelectedDate(newDate);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - 5 + i;
+                    return (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </PopoverContent>
+        </Popover>
+      );
+    }
+  };
+
+  // Get navigation button labels based on period type
+  const getPreviousButtonLabel = () => {
+    switch (periodType) {
+      case "weekly":
+        return "Previous Week";
+      case "monthly":
+        return "Previous Month";
+      case "yearly":
+        return "Previous Year";
+      default:
+        return "Previous";
+    }
+  };
+
+  const getNextButtonLabel = () => {
+    switch (periodType) {
+      case "weekly":
+        return "Next Week";
+      case "monthly":
+        return "Next Month";
+      case "yearly":
+        return "Next Year";
+      default:
+        return "Next";
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Weekly Reports</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{getPageTitle()}</h1>
         <Button onClick={exportToCSV}>
           <FileDown className="mr-2 h-4 w-4" /> Export Report
         </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={goToPreviousWeek}>
-            Previous Week
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Period type selector */}
+          <Select
+            value={periodType}
+            onValueChange={(value) =>
+              setPeriodType(value as "weekly" | "monthly" | "yearly")
+            }
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Period Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" onClick={goToPreviousPeriod}>
+            {getPreviousButtonLabel()}
           </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="min-w-[240px] justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {weekRangeDisplay}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedWeek}
-                onSelect={(date) => date && setSelectedWeek(date)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <Button variant="outline" onClick={goToNextWeek}>
-            Next Week
+
+          {renderDateSelector()}
+
+          <Button variant="outline" onClick={goToNextPeriod}>
+            {getNextButtonLabel()}
           </Button>
         </div>
 
@@ -266,7 +502,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatNaira(totalSales)}</div>
             <p className="text-xs text-muted-foreground">
-              {weekSales.length} transactions this week
+              {periodSales.length} transactions this {periodType.slice(0, -2)}
             </p>
           </CardContent>
         </Card>
@@ -281,7 +517,7 @@ export default function ReportsPage() {
               {formatNaira(totalExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {weekExpenses.length} expenses this week
+              {periodExpenses.length} expenses this {periodType.slice(0, -2)}
             </p>
           </CardContent>
         </Card>
@@ -296,7 +532,8 @@ export default function ReportsPage() {
               {formatNaira(netProfit)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {netProfit >= 0 ? "Profit" : "Loss"} this week
+              {netProfit >= 0 ? "Profit" : "Loss"} this{" "}
+              {periodType.slice(0, -2)}
             </p>
           </CardContent>
         </Card>
@@ -313,9 +550,12 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Summary</CardTitle>
+                <CardTitle>
+                  {periodType.charAt(0).toUpperCase() + periodType.slice(1)}{" "}
+                  Summary
+                </CardTitle>
                 <CardDescription>
-                  Financial overview for {weekRangeDisplay}
+                  Financial overview for {periodRangeDisplay}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -351,7 +591,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle>Visualization</CardTitle>
                 <CardDescription>
-                  Sales vs Expenses for {weekRangeDisplay}
+                  Sales vs Expenses for {periodRangeDisplay}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center h-[300px]">
@@ -360,7 +600,7 @@ export default function ReportsPage() {
                     <div
                       className="w-24 bg-blue-500 rounded-t-md"
                       style={{
-                        height: `${Math.min((totalSales / Math.max(totalSales, totalExpenses)) * 200, 200)}px`,
+                        height: `${Math.min((totalSales / Math.max(totalSales, totalExpenses, 1)) * 200, 200)}px`,
                       }}
                     ></div>
                     <div className="mt-2 text-sm font-medium">Sales</div>
@@ -370,7 +610,7 @@ export default function ReportsPage() {
                     <div
                       className="w-24 bg-red-500 rounded-t-md"
                       style={{
-                        height: `${Math.min((totalExpenses / Math.max(totalSales, totalExpenses)) * 200, 200)}px`,
+                        height: `${Math.min((totalExpenses / Math.max(totalSales, totalExpenses, 1)) * 200, 200)}px`,
                       }}
                     ></div>
                     <div className="mt-2 text-sm font-medium">Expenses</div>
@@ -387,7 +627,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle>Sales Breakdown</CardTitle>
               <CardDescription>
-                Sales by category for {weekRangeDisplay}
+                Sales by category for {periodRangeDisplay}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -418,7 +658,7 @@ export default function ReportsPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
                   <BarChart3 className="h-12 w-12 mb-2" />
-                  <p>No sales data for this week</p>
+                  <p>No sales data for this {periodType.slice(0, -2)}</p>
                 </div>
               )}
             </CardContent>
@@ -430,7 +670,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle>Expenses Breakdown</CardTitle>
               <CardDescription>
-                Expenses by category for {weekRangeDisplay}
+                Expenses by category for {periodRangeDisplay}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -465,7 +705,7 @@ export default function ReportsPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
                   <PieChart className="h-12 w-12 mb-2" />
-                  <p>No expenses data for this week</p>
+                  <p>No expenses data for this {periodType.slice(0, -2)}</p>
                 </div>
               )}
             </CardContent>

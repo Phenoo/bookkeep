@@ -10,7 +10,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Business Management Dashboard",
+  title: "Greenville Apartments - Management Dashboard",
   description: "Track sales and manage inventory across your business",
   generator: "v0.dev",
 };

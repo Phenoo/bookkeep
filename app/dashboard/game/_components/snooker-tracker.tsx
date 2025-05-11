@@ -189,10 +189,10 @@ export function SnookerCoinsTracker() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+    <div className="grid gap-4 md:grid-cols-2 w-full">
+      <div className="space-y-6 w-full">
+        <Card className="w-full ">
+          <CardHeader className="flex flex-row items-center gap-4 justify-between">
             <div>
               <CardTitle className="flex items-center">
                 <Coins className="mr-2 h-5 w-5" />
@@ -410,27 +410,26 @@ export function SnookerCoinsTracker() {
           </CardContent>
         </Card>
       </div>
-
-      <div>
-        <Card className="h-full">
+      <div className="w-full">
+        <Card className="h-full w-full">
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-lg md:text-2xl">
               <ArrowUpDown className="mr-2 h-5 w-5" />
               Transaction History
             </CardTitle>
             <CardDescription>Recent snooker coin transactions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto max-w-xs md:max-w-full w-full">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Coins</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Table</TableHead>
-                    <TableHead>Notes</TableHead>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Type</TableHead>
+                    <TableHead className="whitespace-nowrap">Coins</TableHead>
+                    <TableHead className="whitespace-nowrap">Amount</TableHead>
+                    <TableHead className="whitespace-nowrap">Table</TableHead>
+                    <TableHead className="whitespace-nowrap">Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -443,7 +442,7 @@ export function SnookerCoinsTracker() {
                   ) : (
                     transactions.map((transaction) => (
                       <TableRow key={transaction._id}>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap">
                           {format(new Date(transaction.date), "MMM d, yyyy")}
                         </TableCell>
                         <TableCell>
@@ -458,11 +457,11 @@ export function SnookerCoinsTracker() {
                           </Badge>
                         </TableCell>
                         <TableCell>{transaction.amount}</TableCell>
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap">
                           {formatNaira(transaction.totalAmount)}
                         </TableCell>
                         <TableCell>{transaction.table || "-"}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">
+                        <TableCell className="max-w-[80px] md:max-w-[150px] truncate">
                           {transaction.notes || "-"}
                         </TableCell>
                       </TableRow>

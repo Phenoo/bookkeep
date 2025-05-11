@@ -47,6 +47,7 @@ import { ModeToggle } from "./mode-toggle";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { InventoryAlerts } from "./inventory-alerts";
+import { Spinner } from "./spinner";
 
 // Add color generation function
 const getRandomColor = () => {
@@ -184,15 +185,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/manage",
       icon: ClipboardList,
     },
+  ];
+
+  // Admin-only navigation items
+  const adminItems: MenuItem[] = [
     {
       title: "Audit Logs",
       href: "/dashboard/admin/records",
       icon: BookOpen,
     },
-  ];
-
-  // Admin-only navigation items
-  const adminItems: MenuItem[] = [
     {
       title: "Users",
       href: "/dashboard/admin/users",
@@ -208,7 +209,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/admin/expenses",
       icon: DollarSign,
     },
-    { title: "Reports", href: "/dashboard/reports", icon: FileText },
+    { title: "Reports", href: "/dashboard/admin/reports", icon: FileText },
   ];
 
   // Generate colors for each section
@@ -218,6 +219,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const adminColor = getRandomColor();
 
   // Toggle role for demo purposes
+
+  if (getUser === null || getUser === undefined || !role) {
+    return <Spinner />;
+  }
 
   return (
     <SidebarProvider>
@@ -243,7 +248,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
-                        isActive={pathname === ""}
+                        isActive={pathname === "/dashboard"}
                         tooltip={"Dashboard"}
                       >
                         <Link href={"/dashboard"}>

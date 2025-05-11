@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 const Expensespage = () => {
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
+      <h1 className="text-lg md:text-2xl font-bold tracking-tight">Expenses</h1>
       <p className="text-muted-foreground">
         Track and manage your business expenses
       </p>

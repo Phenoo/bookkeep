@@ -374,8 +374,8 @@ export default function InventoryPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight">
             Inventory Management
           </h1>
           <div className="flex gap-2">
@@ -390,7 +390,9 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Inventory Items</CardTitle>
+            <CardTitle className="text-base md:text-2xl">
+              Inventory Items
+            </CardTitle>
             <CardDescription>
               Manage your inventory items, track stock levels, and update
               quantities.

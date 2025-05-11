@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { formatNaira } from "@/lib/utils";
 
 type Property = {
   _id: Id<"properties">;
@@ -354,10 +355,10 @@ export function PropertiesManager() {
                 )}
                 <div className="flex flex-wrap gap-2 text-sm">
                   {property.pricePerDay && (
-                    <span>Daily: ${property.pricePerDay.toFixed(2)}</span>
+                    <span>Daily: {formatNaira(property.pricePerDay)}</span>
                   )}
                   {property.pricePerMonth && (
-                    <span>Monthly: ${property.pricePerMonth.toFixed(2)}</span>
+                    <span>Monthly: {formatNaira(property.pricePerMonth)}</span>
                   )}
                 </div>
               </div>

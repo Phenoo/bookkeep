@@ -34,6 +34,7 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/clerk-react";
 import { Spinner } from "@/components/spinner";
 import { Id } from "@/convex/_generated/dataModel";
+import { formatNaira } from "@/lib/utils";
 
 // Types
 interface MenuItem {
@@ -223,9 +224,6 @@ export function PosSystem() {
   };
 
   // Format price to display in pounds
-  const formatPrice = (price: number) => {
-    return `₦${(price / 100).toFixed(2)}`;
-  };
 
   if (menuItems === undefined) {
     return (
@@ -284,7 +282,7 @@ export function PosSystem() {
                       <span>{item.name}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span>{formatPrice(item.price)}</span>
+                      <span>{formatNaira(item.price)}</span>
                       <Button
                         variant="default"
                         size="icon"
@@ -339,7 +337,7 @@ export function PosSystem() {
                       <span>{item.name}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span>{formatPrice(item.price)}</span>
+                      <span>{formatNaira(item.price)}</span>
                       <Button
                         variant="default"
                         size="icon"
@@ -405,7 +403,7 @@ export function PosSystem() {
                   {cart.map((item) => (
                     <TableRow key={item._id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{formatPrice(item.price)}</TableCell>
+                      <TableCell>{formatNaira(item.price)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
@@ -427,7 +425,7 @@ export function PosSystem() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell>{formatPrice(item.subtotal)}</TableCell>
+                      <TableCell>{formatNaira(item.subtotal)}</TableCell>
                       <TableCell>
                         <Button
                           variant="ghost"
@@ -449,7 +447,7 @@ export function PosSystem() {
             )}
 
             <div className="mt-4 text-right font-bold">
-              Total: {formatPrice(calculateTotal())}
+              Total: {formatNaira(calculateTotal())}
             </div>
           </CardContent>
 

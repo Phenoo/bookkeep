@@ -1,13 +1,31 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import Link from "next/link";
 
-import { SignInButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Spinner } from "@/components/spinner";
+import { api } from "@/convex/_generated/api";
+import { redirect } from "next/navigation";
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useConvexAuth();
+
+  const { user } = useUser();
+
+  const getUser = useQuery(api.users.getByClerkId, {
+    clerkId: user?.id!,
+  });
+
+  const role = getUser?.role;
+
+  if ((role === "admin" || role === "manager") && isAuthenticated) {
+    return redirect("/dashboard");
+  }
+
+  if (role === "user" && isAuthenticated) {
+    return redirect("/dashboard/pos");
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -44,8 +62,8 @@ export default function Home() {
           </nav>
         </div>
       </header>
-      <main className="flex-1">
-        <section className="max-w-7xl mx-auto px-4 py-12 md:py-24 lg:py-32">
+      <main className="flex-1 h-full  flex-col items-center justify-center flex">
+        <section className="max-w-7xl mx-auto px-4 py-12 md:py-24 lg:py-32  flex-col items-center justify-center  flex">
           <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
             <h1 className="text-3xl font-bold leading-tight sm:text-5xl md:text-6xl lg:text-7xl">
               Complete Business Management
@@ -60,11 +78,6 @@ export default function Home() {
                 <>
                   <SignInButton mode="modal">
                     <Button size="lg">Log in</Button>
-                  </SignInButton>
-                  <SignInButton mode="modal">
-                    <Button variant={"outline"} size="lg">
-                      Dashboard
-                    </Button>
                   </SignInButton>
                 </>
               )}
@@ -83,7 +96,7 @@ export default function Home() {
       <footer className="border-t py-6 md:py-0">
         <div className="max-w-7xl mx-auto p-4 flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} BusinessTracker. All rights
+            &copy; {new Date().getFullYear()} GreenvilleApartments. All rights
             reserved.
           </p>
         </div>

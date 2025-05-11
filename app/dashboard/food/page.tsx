@@ -40,7 +40,7 @@ export default function FoodSalesPage() {
         {/* <div className="md:col-span-1">
           <SalesForm category="food" onSave={handleSaveSale} />
         </div> */}
-        <div className="">
+        <div className="w-full">
           <OrderHistory items={foodSales} />
         </div>
       </div>

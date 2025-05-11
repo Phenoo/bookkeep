@@ -23,6 +23,7 @@ import { formatNaira } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import { Spinner } from "@/components/spinner";
 import { redirect } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
   const sales = useQuery(api.sales.getAllSales) || [];
@@ -33,6 +34,8 @@ export default function DashboardPage() {
 
   const users = useQuery(api.users.getAll) || [];
   const usersActivities = useQuery(api.userActivity.getAll) || [];
+
+  const recentActivity = usersActivities.filter((_, i) => i < 5);
 
   const totalSales = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
 
@@ -62,7 +65,7 @@ export default function DashboardPage() {
     {} as Record<string, number>
   );
 
-  console.log(usersActivities, "actitivds");
+  console.log(recentActivity, "shshhshs");
 
   return (
     <div className="flex flex-col gap-4">
@@ -165,38 +168,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    {
-                      category: "Game",
-                      name: "PlayStation 5",
-                      amount: "$499.99",
-                      date: "Today, 10:30 AM",
-                    },
-                    {
-                      category: "Inventory",
-                      name: "Office Desk (INV001)",
-                      amount: "Added 5 units",
-                      date: "Today, 9:15 AM",
-                    },
-                    {
-                      category: "Rent",
-                      name: "Apartment 4B",
-                      amount: "$1,200.00",
-                      date: "Yesterday, 2:15 PM",
-                    },
-                    {
-                      category: "Food",
-                      name: "Catering Service",
-                      amount: "$350.00",
-                      date: "Yesterday, 11:45 AM",
-                    },
-                    {
-                      category: "Process",
-                      name: "Inventory Audit",
-                      amount: "Updated to 65%",
-                      date: "2 days ago, 3:30 PM",
-                    },
-                  ].map((activity, i) => (
+                  {recentActivity.map((activity, i) => (
                     <div
                       key={i}
                       className="flex items-center justify-between border-b pb-3"
@@ -204,18 +176,19 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className={`rounded-full p-2 ${
-                            activity.category === "Game"
+                            activity.category === "snooker"
                               ? "bg-purple-100 text-purple-700"
-                              : activity.category === "Rent"
+                              : activity.category === "bookings"
                                 ? "bg-blue-100 text-blue-700"
-                                : activity.category === "Food"
+                                : activity.category === "orders"
                                   ? "bg-green-100 text-green-700"
-                                  : activity.category === "Inventory"
+                                  : activity.category === "Inventory" ||
+                                      activity.category === "expenses"
                                     ? "bg-amber-100 text-amber-700"
                                     : "bg-slate-100 text-slate-700"
                           }`}
                         >
-                          {activity.category === "Game" ? (
+                          {activity.category === "snooker" ? (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="24"
@@ -234,7 +207,7 @@ export default function DashboardPage() {
                               <path d="M9 12h6" />
                               <path d="M9 16h6" />
                             </svg>
-                          ) : activity.category === "Rent" ? (
+                          ) : activity.category === "bookings" ? (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="24"
@@ -253,7 +226,7 @@ export default function DashboardPage() {
                               <path d="M3 12V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H9" />
                               <path d="M8 7v5" />
                             </svg>
-                          ) : activity.category === "Food" ? (
+                          ) : activity.category === "orders" ? (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="24"
@@ -272,23 +245,28 @@ export default function DashboardPage() {
                               <path d="M14 15v5" />
                               <path d="M3 8h18" />
                             </svg>
-                          ) : activity.category === "Inventory" ? (
+                          ) : activity.category === "Inventory" ||
+                            activity.category === "expenses" ? (
                             <Package className="h-4 w-4" />
                           ) : (
                             <BarChart3 className="h-4 w-4" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium">{activity.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium">{activity.details}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
                             {activity.category}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{activity.amount}</p>
+                        <p className="font-medium">
+                          {/* {formatNaira(activity.metadata.totalAmount)} */}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {activity.date}
+                          {formatDistanceToNow(new Date(activity.timestamp), {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
                     </div>

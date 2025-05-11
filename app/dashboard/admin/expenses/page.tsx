@@ -57,9 +57,7 @@ const Expensespage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold"> {formatNaira(total)}</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            <p className="text-xs text-muted-foreground"></p>
           </CardContent>
         </Card>
         <Card>
@@ -73,7 +71,7 @@ const Expensespage = () => {
               {highestCategory || ""}
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatNaira(highestAmount)} (29.4%)
+              {formatNaira(highestAmount)}
             </p>
           </CardContent>
         </Card>
@@ -85,7 +83,7 @@ const Expensespage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{expensesLength}</div>
-            <p className="text-xs text-muted-foreground">in the last 7 days</p>
+            <p className="text-xs text-muted-foreground"></p>
           </CardContent>
         </Card>
       </div>

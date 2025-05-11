@@ -42,7 +42,9 @@ export default function ManagePage() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="mb-6 text-3xl font-bold">Manage Business Assets</h1>
+      <h1 className="mb-6 text-lg md:text-2xl font-bold ">
+        Manage Business Assets
+      </h1>
 
       <Tabs
         defaultValue="properties"
@@ -58,7 +60,9 @@ export default function ManagePage() {
         <TabsContent value="properties" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Manage Properties</CardTitle>
+              <CardTitle className="text-base md:text-xl">
+                Manage Properties
+              </CardTitle>
               <CardDescription>
                 Add, edit, or remove properties available for rent or use in
                 your business.
