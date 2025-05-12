@@ -27,11 +27,6 @@ export default function Home() {
                     Log in
                   </Button>
                 </SignInButton>
-                <SignInButton mode="modal">
-                  <Button variant={"ghost"} size={"sm"}>
-                    Dashboard
-                  </Button>
-                </SignInButton>
               </>
             )}
 
