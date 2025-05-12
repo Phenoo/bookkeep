@@ -11,22 +11,6 @@ import { redirect } from "next/navigation";
 export default function Home() {
   const { isAuthenticated, isLoading } = useConvexAuth();
 
-  const { user } = useUser();
-
-  const getUser = useQuery(api.users.getByClerkId, {
-    clerkId: user?.id!,
-  });
-
-  const role = getUser?.role;
-
-  if ((role === "admin" || role === "manager") && isAuthenticated) {
-    return redirect("/dashboard");
-  }
-
-  if (role === "user" && isAuthenticated) {
-    return redirect("/dashboard/pos");
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
