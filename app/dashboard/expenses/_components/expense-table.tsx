@@ -138,7 +138,7 @@ export function ExpensesTable() {
 
   return (
     <>
-      <Card>
+      <Card className="overflow-x-auto">
         <CardHeader>
           <CardTitle>Expenses History</CardTitle>
           <CardDescription>
@@ -185,7 +185,7 @@ export function ExpensesTable() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border ">
             <Table>
               <TableHeader>
                 <TableRow>

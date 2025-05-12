@@ -38,6 +38,23 @@ export const add = mutation({
     endDate: v.string(),
     amount: v.number(),
     depositAmount: v.number(),
+    address: v.optional(
+      v.object({
+        street: v.optional(v.string()),
+        city: v.optional(v.string()),
+        state: v.optional(v.string()),
+        zipCode: v.optional(v.string()),
+        country: v.optional(v.string()),
+      })
+    ),
+    // Next of kin information (new)
+    nextOfKin: v.optional(
+      v.object({
+        name: v.optional(v.string()),
+        relationship: v.optional(v.string()),
+        phone: v.optional(v.string()),
+      })
+    ),
     notes: v.optional(v.string()),
     status: v.string(),
     createdBy: v.optional(v.string()),
@@ -59,6 +76,8 @@ export const add = mutation({
       propertyName: args.propertyName,
       startDate: args.startDate,
       endDate: args.endDate,
+      address: args.address,
+      nextOfKin: args.nextOfKin,
       amount: args.amount,
       depositAmount: args.depositAmount,
       notes: args.notes,
@@ -133,6 +152,23 @@ export const update = mutation({
     propertyName: v.optional(v.string()),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
+    address: v.optional(
+      v.object({
+        street: v.optional(v.string()),
+        city: v.optional(v.string()),
+        state: v.optional(v.string()),
+        zipCode: v.optional(v.string()),
+        country: v.optional(v.string()),
+      })
+    ),
+    // Next of kin information (new)
+    nextOfKin: v.optional(
+      v.object({
+        name: v.optional(v.string()),
+        relationship: v.optional(v.string()),
+        phone: v.optional(v.string()),
+      })
+    ),
     amount: v.optional(v.number()),
     depositAmount: v.optional(v.number()),
     notes: v.optional(v.string()),

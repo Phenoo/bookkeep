@@ -34,6 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const formSchema = z
   .object({
@@ -46,6 +47,20 @@ const formSchema = z
     customerPhone: z.string().min(5, {
       message: "Please enter a valid phone number.",
     }),
+    address: z
+      .object({
+        street: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+      })
+      .optional(),
+    nextOfKin: z
+      .object({
+        name: z.string().optional(),
+        relationship: z.string().optional(),
+        phone: z.string().optional(),
+      })
+      .optional(),
     propertyId: z.string({
       required_error: "Please select a property.",
     }),
@@ -64,7 +79,7 @@ const formSchema = z
       message: "Amount must be a positive number.",
     }),
     totalAmount: z.coerce.number().positive({
-      message: "Total amount must a number",
+      message: "Total amount must be a positive number.",
     }),
     depositAmount: z.coerce.number().nonnegative({
       message: "Deposit amount must be a non-negative number.",
@@ -73,21 +88,6 @@ const formSchema = z
     status: z.enum(["pending", "confirmed", "cancelled", "completed"], {
       required_error: "Please select a status.",
     }),
-    address: z
-      .object({
-        street: z.string().optional(),
-        city: z.string().optional(),
-        state: z.string().optional(),
-      })
-      .optional(),
-    // Add next of kin fields
-    nextOfKin: z
-      .object({
-        name: z.string().optional(),
-        relationship: z.string().optional(),
-        phone: z.string().optional(),
-      })
-      .optional(),
   })
   .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date.",
@@ -100,22 +100,33 @@ interface BookingFormProps {
     name: string;
     pricePerDay?: number;
   }>;
+  booking?: any; // The booking to edit (if in edit mode)
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function BookingForm({ properties, onSuccess }: BookingFormProps) {
+export function EditBookingForm({
+  properties,
+  booking,
+  onSuccess,
+  onCancel,
+}: BookingFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<any>();
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Use the appropriate mutation based on whether we're editing or creating
   const addBooking = useMutation(api.bookings.add);
+  const updateBooking = useMutation(api.bookings.update);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customerName: "",
-      customerEmail: "",
-      customerPhone: "",
-      propertyId: "",
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      propertyId: booking.propertyId,
       propertyName: "",
       startDate: new Date(),
       address: {
@@ -130,14 +141,57 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
       },
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       amount: 0,
+      totalAmount: 0,
       depositAmount: 0,
       notes: "",
       status: "pending",
     },
   });
 
+  // Initialize form with booking data if in edit mode
+  useEffect(() => {
+    if (booking) {
+      setIsEditMode(true);
+
+      // Find the property to set the selected property state
+      const property = properties.find((p) => p._id === booking.propertyId);
+      if (property) {
+        setSelectedProperty(property);
+      }
+
+      // Reset form with booking data
+      form.reset({
+        customerName: booking.customerName,
+        customerEmail: booking.customerEmail,
+        customerPhone: booking.customerPhone,
+        address: booking.address || {
+          street: "",
+          city: "",
+          state: "",
+        },
+        nextOfKin: booking.nextOfKin || {
+          name: "",
+          relationship: "",
+          phone: "",
+        },
+        propertyId: booking.propertyId,
+        propertyName: booking.propertyName,
+        startDate: new Date(booking.startDate),
+        endDate: new Date(booking.endDate),
+        amount:
+          booking.amount /
+          calculateDays(new Date(booking.startDate), new Date(booking.endDate)), // Calculate daily rate
+        totalAmount: booking.amount,
+        depositAmount: booking.depositAmount,
+        notes: booking.notes || "",
+        status: booking.status,
+      });
+    }
+  }, [booking, properties, form]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    console.log(values);
     try {
       // Find the property name based on the selected ID
       const selectedProperty = properties.find(
@@ -147,32 +201,61 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
         values.propertyName = selectedProperty.name;
       }
 
-      await addBooking({
-        customerName: values.customerName,
-        customerEmail: values.customerEmail,
-        customerPhone: values.customerPhone,
-        propertyId: values.propertyId,
-        propertyName: values.propertyName,
-        startDate: values.startDate.toISOString(),
-        endDate: values.endDate.toISOString(),
-        amount: values.totalAmount,
-        depositAmount: values.depositAmount,
-        notes: values.notes,
-        status: values.status,
-      });
+      if (isEditMode && booking) {
+        // Update existing booking
+        await updateBooking({
+          id: booking._id as Id<"bookings">,
+          customerName: values.customerName,
+          customerEmail: values.customerEmail,
+          customerPhone: values.customerPhone,
+          address: values.address,
+          nextOfKin: values.nextOfKin,
+          propertyId: values.propertyId,
+          propertyName: values.propertyName,
+          startDate: values.startDate.toISOString(),
+          endDate: values.endDate.toISOString(),
+          amount: values.totalAmount,
+          depositAmount: values.depositAmount,
+          notes: values.notes,
+          status: values.status,
+        });
 
-      toast({
-        title: "Booking created",
-        description: "The booking has been successfully created.",
-      });
-      form.reset();
+        toast({
+          title: "Booking updated",
+          description: "The booking has been successfully updated.",
+        });
+      } else {
+        // Create new booking
+        await addBooking({
+          customerName: values.customerName,
+          customerEmail: values.customerEmail,
+          customerPhone: values.customerPhone,
+          address: values.address,
+          nextOfKin: values.nextOfKin,
+          propertyId: values.propertyId,
+          propertyName: values.propertyName,
+          startDate: values.startDate.toISOString(),
+          endDate: values.endDate.toISOString(),
+          amount: values.totalAmount,
+          depositAmount: values.depositAmount,
+          notes: values.notes,
+          status: values.status,
+        });
+
+        toast({
+          title: "Booking created",
+          description: "The booking has been successfully created.",
+        });
+        form.reset();
+      }
+
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create booking. Please try again.",
+        description: `Failed to ${isEditMode ? "update" : "create"} booking. Please try again.`,
         variant: "destructive",
       });
       console.error(error);
@@ -230,6 +313,12 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
       form.setValue("amount", property?.pricePerDay);
     }
   }, [selectedProperty]);
+
+  useEffect(() => {
+    form.setValue("propertyId", booking.propertyId);
+  }, [booking]);
+
+  console.log(booking, "proper", booking.propertyId);
 
   return (
     <Form {...form}>
@@ -384,6 +473,7 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                       handlePropertyChange(value);
                     }}
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -411,6 +501,7 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -583,9 +674,22 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Creating Booking..." : "Create Booking"}
-        </Button>
+        <div className="flex gap-2 justify-end">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting
+              ? isEditMode
+                ? "Updating Booking..."
+                : "Creating Booking..."
+              : isEditMode
+                ? "Update Booking"
+                : "Create Booking"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

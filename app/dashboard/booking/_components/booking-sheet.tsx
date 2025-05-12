@@ -24,18 +24,7 @@ export function BookingSheet() {
   };
 
   // If properties aren't loaded yet, use sample data
-  const propertiesData =
-    properties.length > 0
-      ? properties
-      : [
-          { _id: "1", name: "Apartment 4B" },
-          { _id: "2", name: "Office Space 101" },
-          { _id: "3", name: "Storage Unit #42" },
-          { _id: "4", name: "Parking Space P12" },
-          { _id: "5", name: "Conference Room" },
-          { _id: "6", name: "Studio Apartment 2A" },
-          { _id: "7", name: "Retail Space 305" },
-        ];
+  const propertiesData = properties.length > 0 ? properties : [];
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -44,7 +33,7 @@ export function BookingSheet() {
           <Plus className="mr-2 h-4 w-4" /> New Booking
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
+      <SheetContent className="sm:max-w-md md:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>New Booking</SheetTitle>
           <SheetDescription>

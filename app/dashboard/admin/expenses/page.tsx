@@ -88,7 +88,7 @@ const Expensespage = () => {
         </Card>
       </div>
 
-      <div className="grid gap-4 ">
+      <div className="grid gap-4  ">
         <ExpensesTable />
       </div>
     </div>

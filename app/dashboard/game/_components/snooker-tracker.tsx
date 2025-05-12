@@ -410,8 +410,8 @@ export function SnookerCoinsTracker() {
           </CardContent>
         </Card>
       </div>
-      <div className="w-full">
-        <Card className="h-full w-full">
+      <div className="w-full overflow-x-auto">
+        <Card className="h-full w-full ">
           <CardHeader>
             <CardTitle className="flex items-center text-lg md:text-2xl">
               <ArrowUpDown className="mr-2 h-5 w-5" />
@@ -420,7 +420,7 @@ export function SnookerCoinsTracker() {
             <CardDescription>Recent snooker coin transactions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto max-w-xs md:max-w-full w-full">
+            <div className="rounded-md border ">
               <Table>
                 <TableHeader>
                   <TableRow>

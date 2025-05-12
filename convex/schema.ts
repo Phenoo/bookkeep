@@ -40,6 +40,24 @@ export default defineSchema({
     amount: v.number(),
     depositAmount: v.number(),
     notes: v.optional(v.string()),
+    address: v.optional(
+      v.object({
+        street: v.optional(v.string()),
+        city: v.optional(v.string()),
+        state: v.optional(v.string()),
+        zipCode: v.optional(v.string()),
+        country: v.optional(v.string()),
+      })
+    ),
+
+    // Next of kin information (new)
+    nextOfKin: v.optional(
+      v.object({
+        name: v.optional(v.string()),
+        relationship: v.optional(v.string()),
+        phone: v.optional(v.string()),
+      })
+    ),
     status: v.string(), // "pending", "confirmed", "cancelled", "completed"
     createdBy: v.optional(v.string()),
   }).index("by_user", ["createdBy"]),
@@ -68,7 +86,7 @@ export default defineSchema({
     saleDate: v.string(),
     createdBy: v.optional(v.string()),
     status: v.string(),
-  }),
+  }).index("by_user", ["createdBy"]),
 
   // Menu Items table
   menuItems: defineTable({

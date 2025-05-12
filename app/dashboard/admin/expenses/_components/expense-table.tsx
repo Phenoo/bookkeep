@@ -133,14 +133,14 @@ export function ExpensesTable() {
 
   return (
     <>
-      <Card>
+      <Card className="overflow-x-auto">
         <CardHeader>
           <CardTitle>Expenses History</CardTitle>
           <CardDescription>
             View and manage your business expenses
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -180,7 +180,7 @@ export function ExpensesTable() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border ">
             <Table>
               <TableHeader>
                 <TableRow>
