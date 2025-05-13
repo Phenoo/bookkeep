@@ -140,6 +140,12 @@ export const updateSaleStatus = mutation({
   handler: async (ctx, args) => {
     const { saleId, status, notes, updatedBy } = args;
 
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     // Get the current sale
     const sale = await ctx.db.get(saleId);
     if (!sale) {

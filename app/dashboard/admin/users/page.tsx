@@ -63,7 +63,9 @@ import {
   MoreHorizontal,
   Search,
   Shield,
+  ShieldCheck,
   User,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -88,6 +90,9 @@ export default function UsersPage() {
   const users = useQuery(api.users.getAll) || [];
 
   const updateRole = useMutation(api.users.updateRole);
+
+  const approveUser = useMutation(api.users.approveUser);
+  const suspendUser = useMutation(api.users.suspendUser);
 
   // Filter users based on search query
   const filteredUsers = users.filter(
@@ -153,6 +158,28 @@ export default function UsersPage() {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
+  const onApporve = (userId: string) => {
+    const promise = approveUser({
+      clerkId: userId,
+    });
+    toast.promise(promise, {
+      loading: "Approving user...",
+      success: "User successfully approved",
+      error: "Error approving user.",
+    });
+  };
+
+  const onSuspend = (userId: string) => {
+    const promise = suspendUser({
+      clerkId: userId,
+    });
+
+    toast.promise(promise, {
+      loading: "Suspending user...",
+      success: "User successfully suspended",
+      error: "Error suspending user.",
+    });
+  };
   const viewUserDetails = (userId: string) => {
     router.push(`/dashboard/admin/users/${userId}`);
   };
@@ -191,6 +218,7 @@ export default function UsersPage() {
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">
                       Details
                     </TableHead>
@@ -234,6 +262,7 @@ export default function UsersPage() {
                               user.role.slice(1)}
                           </Badge>
                         </TableCell>
+                        <TableCell>{user.isApproved ? "Yes" : "No"}</TableCell>
                         <TableCell className="font-medium">
                           <Button
                             variant="link"
@@ -261,6 +290,23 @@ export default function UsersPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
+                              {!user.isApproved ? (
+                                <DropdownMenuItem
+                                  onClick={() => onApporve(user.clerkId)}
+                                >
+                                  <ShieldCheck className="mr-2 h-4 w-4" />
+                                  Approve User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    onSuspend(user.clerkId);
+                                  }}
+                                >
+                                  <X className="mr-2 h-4 w-4" />
+                                  Suspend User
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => {
                                   openRoleUpdateDialog(user);
@@ -268,6 +314,7 @@ export default function UsersPage() {
                               >
                                 <Shield className="mr-2 h-4 w-4" /> Change Role
                               </DropdownMenuItem>
+
                               <DropdownMenuItem>
                                 <User className="mr-2 h-4 w-4" /> View Profile
                               </DropdownMenuItem>

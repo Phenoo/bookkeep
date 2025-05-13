@@ -11,6 +11,7 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    isApproved: v.optional(v.boolean()),
     role: v.string(),
     lastSignInAt: v.optional(v.number()),
     createdAt: v.number(),

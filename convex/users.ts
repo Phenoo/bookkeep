@@ -56,6 +56,7 @@ export const syncUser = mutation({
         firstName: args.firstName,
         lastName: args.lastName || "",
         imageUrl: args.imageUrl,
+        isApproved: false,
         role: args.role || "user",
         lastSignInAt: args.lastSignInAt,
         createdAt: args.createdAt || Date.now(),
@@ -83,6 +84,54 @@ export const updateRole = mutation({
 
     return await ctx.db.patch(user._id, {
       role: args.role,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const approveUser = mutation({
+  args: {
+    clerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), args.clerkId))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return await ctx.db.patch(user._id, {
+      isApproved: true,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const suspendUser = mutation({
+  args: {
+    clerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), args.clerkId))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return await ctx.db.patch(user._id, {
+      isApproved: false,
       updatedAt: Date.now(),
     });
   },
