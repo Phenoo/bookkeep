@@ -1,29 +1,35 @@
 "use client";
-
-import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Clock, CheckCircle, BarChart3 } from "lucide-react";
 import { IssueReportForm } from "@/components/userform-issue";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { AdminIssueList } from "./_components/adminlist-issues";
+import { Spinner } from "@/components/spinner";
 
 const IssueContainerAdmin = () => {
-  const allIssues = useQuery(api.issues.getAll);
+  // Use a try/catch pattern with useQuery to handle loading states
+  const allIssues = useQuery(api.issues.getAll) || [];
 
-  const openIssues = allIssues?.filter((item) => item.status === "open");
+  // Only filter if allIssues is available
+  const openIssues = allIssues?.filter((item) => item.status === "open") || [];
+  const inprogressIssues =
+    allIssues?.filter((item) => item.status === "in-progress") || [];
+  const resolvedIssues =
+    allIssues?.filter((item) => item.status === "resolved") || [];
 
-  const inprogressIssues = allIssues?.filter(
-    (item) => item.status === "in-progress"
-  );
-  const resolvedIssues = allIssues?.filter(
-    (item) => item.status === "resolved"
-  );
+  // Show loading state while data is being fetched
+  if (allIssues === undefined) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <div className=" ">
+    <div className="">
       <h1 className="text-3xl font-bold mb-6">Issue Reports</h1>
 
       <div className="grid gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
@@ -33,7 +39,7 @@ const IssueContainerAdmin = () => {
             <AlertCircle className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{openIssues?.length || 0}</div>
+            <div className="text-2xl font-bold">{openIssues.length}</div>
             <p className="text-xs text-muted-foreground"></p>
           </CardContent>
         </Card>
@@ -44,9 +50,7 @@ const IssueContainerAdmin = () => {
             <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {inprogressIssues?.length || 0}
-            </div>
+            <div className="text-2xl font-bold">{inprogressIssues.length}</div>
             <p className="text-xs text-muted-foreground">-</p>
           </CardContent>
         </Card>
@@ -57,9 +61,7 @@ const IssueContainerAdmin = () => {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {resolvedIssues?.length || 0}
-            </div>
+            <div className="text-2xl font-bold">{resolvedIssues.length}</div>
             <p className="text-xs text-muted-foreground"></p>
           </CardContent>
         </Card>
@@ -81,7 +83,6 @@ const IssueContainerAdmin = () => {
       <Tabs defaultValue="admin" className="space-y-6">
         <TabsList>
           <TabsTrigger value="admin">Admin Dashboard</TabsTrigger>
-
           <TabsTrigger value="report">Report an Issue</TabsTrigger>
         </TabsList>
 
