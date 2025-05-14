@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     },
     {
       title: "Issues Report",
-      href: "/dashboard/admin/issues",
+      href: "/dashboard/admin/reports-issues",
       icon: FileUser,
     },
     {
