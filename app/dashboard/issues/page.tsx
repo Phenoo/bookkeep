@@ -2,10 +2,8 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Clock, CheckCircle, BarChart3 } from "lucide-react";
-import { UserIssueList } from "@/components/userlist-issues";
 import { IssueReportForm } from "@/components/userform-issue";
+import { UserIssueList } from "../food/_components/userlist-issues";
 
 export default function Issuepage() {
   return (
