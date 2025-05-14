@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Spinner } from "@/components/spinner";
 
-export default function AdminIssuespage() {
+const Mainissuepage = () => {
   const allIssues = useQuery(api.issues.getAll);
 
   const openIssues = allIssues?.filter((item) => item.status === "open");
@@ -23,7 +23,7 @@ export default function AdminIssuespage() {
     (item) => item.status === "resolved"
   );
 
-  if (allIssues === undefined) {
+  if (allIssues === undefined || allIssues === null) {
     return <Spinner />;
   }
   return (
@@ -96,4 +96,6 @@ export default function AdminIssuespage() {
       </Tabs>
     </div>
   );
-}
+};
+
+export default Mainissuepage;

@@ -5,8 +5,8 @@ import { v } from "convex/values";
 export const getAll = query({
   handler: async (ctx) => {
     // In a real app, you would check if the user is an admin here
-    // const identity = await ctx.auth.getUserIdentity()
-    // if (!identity || !isAdmin(identity)) throw new Error("Unauthorized")
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
 
     return await ctx.db.query("issues").collect();
   },
