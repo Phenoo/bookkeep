@@ -173,11 +173,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </svg>
       ),
     },
-    {
-      title: "Issues Report",
-      href: "/dashboard/issues",
-      icon: FileUser,
-    },
   ];
 
   // Book keeping items
@@ -191,6 +186,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       title: "Manage",
       href: "/dashboard/manage",
       icon: ClipboardList,
+    },
+    {
+      title: "Issues Report",
+      href: "/dashboard/issues",
+      icon: FileUser,
     },
   ];
 
