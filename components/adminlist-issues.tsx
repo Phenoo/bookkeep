@@ -27,7 +27,6 @@ import {
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/spinner";
-import type { Id } from "@/convex/_generated/dataModel";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +38,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface Issue {
   _id: Id<"issues">;
@@ -54,6 +54,10 @@ interface Issue {
 }
 
 export function AdminIssueList() {
+  // Get all issues for admin
+  const allIssues = useQuery(api.issues.getAll);
+  const updateIssue = useMutation(api.issues.update);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -62,10 +66,6 @@ export function AdminIssueList() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignee, setAssignee] = useState("");
-
-  // Get all issues for admin
-  const allIssues = useQuery(api.issues.getAll);
-  const updateIssue = useMutation(api.issues.update);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

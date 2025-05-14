@@ -9,17 +9,23 @@ import { IssueReportForm } from "@/components/userform-issue";
 import { AdminIssueList } from "@/components/adminlist-issues";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { Spinner } from "@/components/spinner";
 
 export default function AdminIssuespage() {
   const allIssues = useQuery(api.issues.getAll);
 
   const openIssues = allIssues?.filter((item) => item.status === "open");
+
   const inprogressIssues = allIssues?.filter(
     (item) => item.status === "in-progress"
   );
   const resolvedIssues = allIssues?.filter(
     (item) => item.status === "resolved"
   );
+
+  if (allIssues === undefined) {
+    return <Spinner />;
+  }
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Issue Reports</h1>
