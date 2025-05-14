@@ -32,7 +32,7 @@ export default defineSchema({
   // Bookings table
   bookings: defineTable({
     customerName: v.string(),
-    customerEmail: v.string(),
+    customerEmail: v.optional(v.string()),
     customerPhone: v.optional(v.string()),
     propertyId: v.string(),
     propertyName: v.string(),

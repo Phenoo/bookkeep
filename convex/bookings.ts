@@ -30,7 +30,7 @@ export const getById = query({
 export const add = mutation({
   args: {
     customerName: v.string(),
-    customerEmail: v.string(),
+    customerEmail: v.optional(v.string()),
     customerPhone: v.optional(v.string()),
     propertyId: v.id("properties"), // ✅ Should be ID type for reference
     propertyName: v.string(),
