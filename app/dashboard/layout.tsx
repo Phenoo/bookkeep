@@ -26,7 +26,7 @@ const MainDashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const isApproved = getUser?.isApproved;
 
-  if (isLoading && !isClerkLoaded) {
+  if (isLoading) {
     return (
       <div className="h-full flex items-center  justify-center">
         <Spinner size={"lg"} />
@@ -38,7 +38,15 @@ const MainDashboardLayout = ({ children }: DashboardLayoutProps) => {
     return redirect("/");
   }
 
-  if (!isApproved) {
+  if (!isClerkLoaded && getUser === undefined) {
+    return (
+      <div className="h-full flex items-center  justify-center">
+        <Spinner size={"lg"} />
+      </div>
+    );
+  }
+
+  if (getUser && !isApproved) {
     return (
       <>
         <AdminContactDialog open={true} />
