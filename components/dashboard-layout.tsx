@@ -10,6 +10,7 @@ import {
   ClipboardList,
   DollarSign,
   FileText,
+  FileUser,
   Home,
   LogOut,
   Package,
@@ -172,6 +173,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </svg>
       ),
     },
+    {
+      title: "Issues Report",
+      href: "/dashboard/issues",
+      icon: FileUser,
+    },
   ];
 
   // Book keeping items
@@ -210,7 +216,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/admin/expenses",
       icon: DollarSign,
     },
-    { title: "Reports", href: "/dashboard/admin/reports", icon: FileText },
+    {
+      title: "Issues Report",
+      href: "/dashboard/admin/issues",
+      icon: FileUser,
+    },
+    {
+      title: "Financial Reports",
+      href: "/dashboard/admin/reports",
+      icon: FileText,
+    },
   ];
 
   // Generate colors for each section

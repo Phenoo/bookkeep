@@ -18,6 +18,7 @@ import type * as bookings from "../bookings.js";
 import type * as expenses from "../expenses.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
+import type * as issues from "../issues.js";
 import type * as menu from "../menu.js";
 import type * as orders from "../orders.js";
 import type * as properties from "../properties.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   expenses: typeof expenses;
   http: typeof http;
   inventory: typeof inventory;
+  issues: typeof issues;
   menu: typeof menu;
   orders: typeof orders;
   properties: typeof properties;

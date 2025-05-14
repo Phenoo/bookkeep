@@ -182,4 +182,29 @@ export default defineSchema({
     totalAmount: v.number(),
     createdBy: v.string(),
   }).index("by_date", ["date"]),
+
+  issues: defineTable({
+    title: v.string(),
+    description: v.string(),
+    priority: v.string(), // "low", "medium", "high", "critical"
+    category: v.string(), // "technical", "billing", "feature", "security", "other"
+    status: v.string(), // "open", "in-progress", "resolved"
+    attachments: v.array(v.string()),
+    createdAt: v.string(), // ISO date string
+    updatedAt: v.optional(v.string()), // ISO date string
+    createdBy: v.optional(v.string()),
+    assignedTo: v.optional(v.union(v.string(), v.null())),
+    comments: v.array(
+      v.object({
+        id: v.string(),
+        content: v.string(),
+        createdBy: v.optional(v.string()),
+        createdAt: v.string(), // ISO date string
+      })
+    ),
+  })
+    .index("by_user", ["createdBy"])
+    .index("by_status", ["status"])
+    .index("by_priority", ["priority"])
+    .index("by_category", ["category"]),
 });

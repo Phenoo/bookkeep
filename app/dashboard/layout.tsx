@@ -7,7 +7,6 @@ import { redirect } from "next/navigation";
 import { Spinner } from "@/components/spinner";
 import { useUser } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { AdminContactDialog } from "@/components/admin-restrict-access";
 
 interface DashboardLayoutProps {
