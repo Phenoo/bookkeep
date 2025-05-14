@@ -24,7 +24,6 @@ import {
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useToast } from "./ui/use-toast";
 import { toast } from "sonner";
 
 interface IssueReportFormProps {
