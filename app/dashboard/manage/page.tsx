@@ -20,11 +20,12 @@ import { useUser } from "@clerk/clerk-react";
 export default function ManagePage() {
   const [activeTab, setActiveTab] = useState("properties");
 
-  const { user } = useUser();
+  const { user, isLoaded: isClerkLoaded } = useUser();
 
-  const getUser = useQuery(api.users.getByClerkId, {
-    clerkId: user?.id!,
-  });
+  const getUser = useQuery(
+    api.users.getByClerkId,
+    isClerkLoaded && user?.id ? { clerkId: user.id } : "skip"
+  );
 
   const role = getUser?.role;
 

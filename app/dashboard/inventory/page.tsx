@@ -92,11 +92,12 @@ export default function InventoryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<InventoryItem | null>(null);
 
-  const { user } = useUser();
+  const { user, isLoaded: isClerkLoaded } = useUser();
 
-  const getUser = useQuery(api.users.getByClerkId, {
-    clerkId: user?.id!,
-  });
+  const getUser = useQuery(
+    api.users.getByClerkId,
+    isClerkLoaded && user?.id ? { clerkId: user.id } : "skip"
+  );
   // Form state
   const [formData, setFormData] = useState({
     name: "",

@@ -28,7 +28,7 @@ import { formatDistanceToNow } from "date-fns";
 export default function DashboardPage() {
   const sales = useQuery(api.sales.getAllSales) || [];
 
-  const { user } = useUser();
+  const { user, isLoaded: isClerkLoaded } = useUser();
 
   const inventoryItems = useQuery(api.inventory.getAll) || [];
 
@@ -39,9 +39,10 @@ export default function DashboardPage() {
 
   const totalSales = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
 
-  const getUser = useQuery(api.users.getByClerkId, {
-    clerkId: user?.id!,
-  });
+  const getUser = useQuery(
+    api.users.getByClerkId,
+    isClerkLoaded && user?.id ? { clerkId: user.id } : "skip"
+  );
 
   const role = getUser?.role;
 
@@ -64,8 +65,6 @@ export default function DashboardPage() {
     },
     {} as Record<string, number>
   );
-
-  console.log(recentActivity, "shshhshs");
 
   return (
     <div className="flex flex-col gap-4">

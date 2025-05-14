@@ -16,26 +16,29 @@ interface DashboardLayoutProps {
 
 const MainDashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { user } = useUser();
 
-  const getUser = useQuery(api.users.getByClerkId, {
-    clerkId: user?.id!,
-  });
+  const { user, isLoaded: isClerkLoaded } = useUser();
+
+  const getUser = useQuery(
+    api.users.getByClerkId,
+    isClerkLoaded && user?.id ? { clerkId: user.id } : "skip"
+  );
 
   const isApproved = getUser?.isApproved;
 
-  if (isLoading) {
+  if (isLoading && !isClerkLoaded) {
     return (
       <div className="h-full flex items-center  justify-center">
         <Spinner size={"lg"} />
       </div>
     );
   }
+
   if (!isAuthenticated) {
     return redirect("/");
   }
 
-  if (isAuthenticated && !isApproved) {
+  if (!isApproved) {
     return (
       <>
         <AdminContactDialog open={true} />
