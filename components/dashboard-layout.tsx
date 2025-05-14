@@ -385,7 +385,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-sm font-medium">
                 {role === "admin" ? "Admin View" : "User View"}
               </span>
-              <UserButton afterSwitchSessionUrl="/" />
+              <UserButton afterSwitchSessionUrl="/" afterSignOutUrl="/" />
               <ModeToggle />
             </div>
             <div className="">

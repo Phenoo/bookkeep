@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -33,7 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast"; // Updated import path
 import { formatNaira } from "@/lib/utils";
 
 type Property = {
@@ -89,7 +91,9 @@ export function PropertiesManager() {
     });
   };
 
-  const handleAddProperty = async () => {
+  const handleAddProperty = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent form submission from refreshing the page
+
     try {
       await addProperty({
         name: formData.name,
@@ -131,7 +135,9 @@ export function PropertiesManager() {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateProperty = async () => {
+  const handleUpdateProperty = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent form submission from refreshing the page
+
     if (!selectedProperty) return;
 
     try {
@@ -184,114 +190,6 @@ export function PropertiesManager() {
     }
   };
 
-  const PropertyForm = () => (
-    <div className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="name">Property Name</Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Enter property name"
-          required
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="type">Property Type</Label>
-        <Select
-          value={formData.type}
-          onValueChange={(value) => setFormData({ ...formData, type: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select property type" />
-          </SelectTrigger>
-          <SelectContent>
-            {propertyTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
-          }
-          placeholder="Enter property description"
-          rows={3}
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="address">Address</Label>
-        <Input
-          id="address"
-          value={formData.address}
-          onChange={(e) =>
-            setFormData({ ...formData, address: e.target.value })
-          }
-          placeholder="Enter property address"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="pricePerDay">Price Per Day</Label>
-          <Input
-            id="pricePerDay"
-            type="number"
-            value={formData.pricePerDay}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                pricePerDay: Number.parseFloat(e.target.value) || 0,
-              })
-            }
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="pricePerMonth">Price Per Month</Label>
-          <Input
-            id="pricePerMonth"
-            type="number"
-            value={formData.pricePerMonth}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                pricePerMonth: Number.parseFloat(e.target.value) || 0,
-              })
-            }
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isAvailable"
-          checked={formData.isAvailable}
-          onCheckedChange={(checked) =>
-            setFormData({ ...formData, isAvailable: checked })
-          }
-        />
-        <Label htmlFor="isAvailable">Available for booking</Label>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between">
@@ -317,16 +215,127 @@ export function PropertiesManager() {
                 done.
               </DialogDescription>
             </DialogHeader>
-            <PropertyForm />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsAddDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAddProperty}>Save Property</Button>
-            </DialogFooter>
+            <form onSubmit={handleAddProperty}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Property Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="Enter property name"
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Property Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, type: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select property type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {propertyTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder="Enter property description"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Enter property address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="pricePerDay">Price Per Day</Label>
+                    <Input
+                      id="pricePerDay"
+                      type="number"
+                      value={formData.pricePerDay}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pricePerDay: Number.parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="pricePerMonth">Price Per Month</Label>
+                    <Input
+                      id="pricePerMonth"
+                      type="number"
+                      value={formData.pricePerMonth}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pricePerMonth: Number.parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isAvailable"
+                    checked={formData.isAvailable}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isAvailable: checked })
+                    }
+                  />
+                  <Label htmlFor="isAvailable">Available for booking</Label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save Property</Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -404,16 +413,127 @@ export function PropertiesManager() {
               Update the property details. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
-          <PropertyForm />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateProperty}>Update Property</Button>
-          </DialogFooter>
+          <form onSubmit={handleUpdateProperty}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Property Name</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Enter property name"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-type">Property Type</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {propertyTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Enter property description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-address">Address</Label>
+                <Input
+                  id="edit-address"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Enter property address"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-pricePerDay">Price Per Day</Label>
+                  <Input
+                    id="edit-pricePerDay"
+                    type="number"
+                    value={formData.pricePerDay}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        pricePerDay: Number.parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-pricePerMonth">Price Per Month</Label>
+                  <Input
+                    id="edit-pricePerMonth"
+                    type="number"
+                    value={formData.pricePerMonth}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        pricePerMonth: Number.parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-isAvailable"
+                  checked={formData.isAvailable}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isAvailable: checked })
+                  }
+                />
+                <Label htmlFor="edit-isAvailable">Available for booking</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Update Property</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
