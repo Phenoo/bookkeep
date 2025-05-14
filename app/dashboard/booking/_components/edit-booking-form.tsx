@@ -41,9 +41,7 @@ const formSchema = z
     customerName: z.string().min(2, {
       message: "Customer name must be at least 2 characters.",
     }),
-    customerEmail: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
+    customerEmail: z.string().optional(),
     customerPhone: z.string().min(5, {
       message: "Please enter a valid phone number.",
     }),
