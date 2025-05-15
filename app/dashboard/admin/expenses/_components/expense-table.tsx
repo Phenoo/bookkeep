@@ -70,9 +70,14 @@ export function ExpensesTable() {
       expense.vendor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expense.notes?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = categoryFilter
-      ? expense.category === categoryFilter
-      : true;
+    // const matchesCategory = categoryFilter
+    //   ? expense.category === categoryFilter
+    //   : true;
+
+    const matchesCategory =
+      !categoryFilter || categoryFilter === "all"
+        ? true
+        : expense.category === categoryFilter;
 
     return matchesSearch && matchesCategory;
   });

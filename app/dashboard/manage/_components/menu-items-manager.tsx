@@ -268,7 +268,7 @@ export function MenuItemsManager() {
                     }
                     placeholder="0.00"
                     min="0"
-                    step="0.01"
+                    step="1"
                     required
                   />
                 </div>

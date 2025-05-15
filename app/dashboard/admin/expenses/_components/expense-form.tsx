@@ -160,9 +160,10 @@ export function ExpenseForm() {
                 id="amount"
                 name="amount"
                 type="number"
-                step="0.01"
+                step="1"
                 min="0"
                 placeholder="0.00"
+                onWheel={(e) => e.currentTarget.blur()}
                 value={formData.amount}
                 onChange={handleChange}
                 required

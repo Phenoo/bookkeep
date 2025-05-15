@@ -1,51 +1,64 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import { CalendarIcon, Plus } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { CalendarIcon, Plus } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface SalesFormProps {
-  category: "game" | "rent" | "food"
-  onSave: (data: SaleItem) => void
+  category: "game" | "rent" | "food";
+  onSave: (data: SaleItem) => void;
 }
 
 export interface SaleItem {
-  id: string
-  name: string
-  amount: number
-  quantity: number
-  date: Date
-  notes: string
-  category: "game" | "rent" | "food"
+  id: string;
+  name: string;
+  amount: number;
+  quantity: number;
+  date: Date;
+  notes: string;
+  category: "game" | "rent" | "food";
 }
 
 export default function SalesForm({ category, onSave }: SalesFormProps) {
-  const { toast } = useToast()
-  const [date, setDate] = useState<Date>(new Date())
+  const { toast } = useToast();
+  const [date, setDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
     quantity: "1",
     notes: "",
-  })
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate form
     if (!formData.name.trim()) {
@@ -53,26 +66,32 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
         title: "Error",
         description: "Please enter an item name",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (isNaN(Number.parseFloat(formData.amount)) || Number.parseFloat(formData.amount) <= 0) {
+    if (
+      isNaN(Number.parseFloat(formData.amount)) ||
+      Number.parseFloat(formData.amount) <= 0
+    ) {
       toast({
         title: "Error",
         description: "Please enter a valid amount",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (isNaN(Number.parseInt(formData.quantity)) || Number.parseInt(formData.quantity) <= 0) {
+    if (
+      isNaN(Number.parseInt(formData.quantity)) ||
+      Number.parseInt(formData.quantity) <= 0
+    ) {
       toast({
         title: "Error",
         description: "Please enter a valid quantity",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     // Create new sale item
@@ -84,10 +103,10 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
       date: date,
       notes: formData.notes,
       category,
-    }
+    };
 
     // Save the sale
-    onSave(newSale)
+    onSave(newSale);
 
     // Reset form
     setFormData({
@@ -95,21 +114,25 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
       amount: "",
       quantity: "1",
       notes: "",
-    })
-    setDate(new Date())
+    });
+    setDate(new Date());
 
     // Show success toast
     toast({
       title: "Success",
       description: "Sale has been recorded successfully",
-    })
-  }
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New {category.charAt(0).toUpperCase() + category.slice(1)} Sale</CardTitle>
-        <CardDescription>Record a new sale in the {category} category</CardDescription>
+        <CardTitle>
+          Add New {category.charAt(0).toUpperCase() + category.slice(1)} Sale
+        </CardTitle>
+        <CardDescription>
+          Record a new sale in the {category} category
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -132,7 +155,7 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
                 id="amount"
                 name="amount"
                 type="number"
-                step="0.01"
+                step="1"
                 min="0"
                 placeholder="0.00"
                 value={formData.amount}
@@ -160,13 +183,21 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
             <Label>Date</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} initialFocus />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(date) => date && setDate(date)}
+                  initialFocus
+                />
               </PopoverContent>
             </Popover>
           </div>
@@ -189,5 +220,5 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }

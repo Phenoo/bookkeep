@@ -597,8 +597,9 @@ export function EditBookingForm({
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       placeholder="0.00"
+                      onWheel={(e) => e.currentTarget.blur()}
                       {...field}
                     />
                   </FormControl>
@@ -617,8 +618,9 @@ export function EditBookingForm({
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       placeholder="0.00"
+                      onWheel={(e) => e.currentTarget.blur()}
                       {...field}
                       readOnly
                     />
@@ -640,7 +642,8 @@ export function EditBookingForm({
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
+                      onWheel={(e) => e.currentTarget.blur()}
                       placeholder="0.00"
                       {...field}
                     />

@@ -230,9 +230,10 @@ export function SnookerCoinsTracker() {
                           <FormControl>
                             <Input
                               type="number"
-                              step="0.01"
-                              min="0.01"
+                              step="1"
+                              min="1"
                               {...field}
+                              onWheel={(e) => e.currentTarget.blur()}
                             />
                           </FormControl>
                           <FormMessage />
@@ -308,6 +309,7 @@ export function SnookerCoinsTracker() {
                           min="1"
                           placeholder="Enter amount"
                           {...field}
+                          onWheel={(e) => e.currentTarget.blur()}
                         />
                       </FormControl>
                       {field.value > 0 && (

@@ -510,9 +510,10 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       placeholder="0.00"
                       {...field}
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </FormControl>
                   <FormDescription>Price per day</FormDescription>
@@ -530,9 +531,10 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       placeholder="0.00"
                       {...field}
+                      onWheel={(e) => e.currentTarget.blur()}
                       readOnly
                     />
                   </FormControl>
@@ -553,8 +555,9 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       placeholder="0.00"
+                      onWheel={(e) => e.currentTarget.blur()}
                       {...field}
                     />
                   </FormControl>

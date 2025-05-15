@@ -160,24 +160,6 @@ export default function ActivityPage() {
                     ))}
                   </SelectContent>
                 </Select>
-
-                {/* <Select
-                  value={filterResource}
-                  onValueChange={setFilterResource}
-                >
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Resource Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Resources</SelectItem>
-                    {uniqueResourceTypes.map((resourceType) => (
-                      <SelectItem key={resourceType} value={resourceType}>
-                        {resourceType.charAt(0).toUpperCase() +
-                          resourceType.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
               </div>
             </div>
 

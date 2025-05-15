@@ -87,10 +87,11 @@ export function OrderFiltersDialog({
                 id="min-amount"
                 type="number"
                 min="0"
-                step="0.01"
+                step="1"
                 placeholder="0.00"
                 value={minAmount}
                 onChange={(e) => setMinAmount(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div className="space-y-2">
@@ -99,10 +100,11 @@ export function OrderFiltersDialog({
                 id="max-amount"
                 type="number"
                 min="0"
-                step="0.01"
+                step="1"
                 placeholder="0.00"
                 value={maxAmount}
                 onChange={(e) => setMaxAmount(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
           </div>

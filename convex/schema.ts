@@ -124,6 +124,7 @@ export default defineSchema({
   }).index("by_user", ["createdBy"]),
 
   // Inventory table
+  // Existing Inventory table
   inventory: defineTable({
     name: v.string(),
     category: v.string(),
@@ -142,6 +143,30 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_supplier", ["supplier"])
     .index("by_user", ["createdBy"]),
+
+  // New Inventory History table
+  inventoryHistory: defineTable({
+    inventoryId: v.id("inventory"), // Reference to the inventory item
+    action: v.string(), // "created", "updated", "deleted", "stock_in", "stock_out"
+    timestamp: v.string(), // ISO date string
+    previousQuantity: v.optional(v.number()),
+    newQuantity: v.optional(v.number()),
+    quantityChange: v.optional(v.number()), // Positive for additions, negative for removals
+    previousCostPerUnit: v.optional(v.number()),
+    newCostPerUnit: v.optional(v.number()),
+    previousTotalValue: v.optional(v.number()),
+    newTotalValue: v.optional(v.number()),
+    previousStatus: v.optional(v.string()),
+    newStatus: v.optional(v.string()),
+    reason: v.optional(v.string()), // Reason for the change (e.g., "Restocking", "Damaged", "Sale")
+    notes: v.optional(v.string()),
+    performedBy: v.optional(v.string()), // User who made the change
+    documentReference: v.optional(v.string()), // Reference to related document (e.g., order ID, invoice number)
+  })
+    .index("by_inventory_id", ["inventoryId"])
+    .index("by_action", ["action"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_user", ["performedBy"]),
   // User activity table
   userActivity: defineTable({
     userId: v.string(),

@@ -24,7 +24,6 @@ export function AdminContactDialog({
   open,
   onOpenChange,
   adminEmail = "admin@greenvilleapartments.online",
-  adminPhone = "",
 }: AdminContactDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
