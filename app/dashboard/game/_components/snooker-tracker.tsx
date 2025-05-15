@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   PlusCircle,
-  MinusCircle,
   Coins,
   ArrowUpDown,
   CalendarIcon,
@@ -18,7 +17,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -473,14 +471,6 @@ export function SnookerCoinsTracker() {
               </Table>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <div>
-              <p className="text-sm font-medium">
-                Total Revenue: {formatNaira(totalRevenue)}
-              </p>
-            </div>
-            <Button variant="outline">Export Transactions</Button>
-          </CardFooter>
         </Card>
       </div>
     </div>
