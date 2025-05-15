@@ -403,7 +403,6 @@ export default function InventoryPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <Button onClick={runMigration}>Run migration</Button>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-lg md:text-2xl font-bold tracking-tight">
             Inventory Management
