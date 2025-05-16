@@ -38,7 +38,7 @@ const getStatusColor = (status: string) => {
 };
 
 // Calculate the number of days between start and end dates
-const calculateDays = (start: string, end: string) => {
+export const calculateDays = (start: string, end: string) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
@@ -86,11 +86,11 @@ export function BookingDetails({ booking }: BookingDetailsProps) {
           <CardContent className="space-y-4">
             <div>
               <p className="font-medium text-lg">{booking.customerName}</p>
-              <div className="flex items-center text-muted-foreground mt-1">
+              <div className="flex items-center text-muted-foreground mt-1 text-sm">
                 <Mail className="h-4 w-4 mr-2" />
                 <span>{booking.customerEmail}</span>
               </div>
-              <div className="flex items-center text-muted-foreground mt-1">
+              <div className="flex items-center text-muted-foreground mt-1 text-sm">
                 <Phone className="h-4 w-4 mr-2" />
                 <span>{booking.customerPhone}</span>
               </div>
@@ -172,11 +172,13 @@ export function BookingDetails({ booking }: BookingDetailsProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <p className="text-sm text-muted-foreground">Daily Rate</p>
-                <p className="font-medium">{formatNaira(dailyRate)}</p>
+                <p className="font-medium">{formatNaira(booking.amount)}</p>
               </div>
               <div className="flex justify-between">
                 <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="font-medium">{formatNaira(booking.amount)}</p>
+                <p className="font-medium">
+                  {formatNaira(booking.amount * days)}
+                </p>
               </div>
               {booking.depositAmount > 0 && (
                 <div className="flex justify-between">
@@ -190,7 +192,7 @@ export function BookingDetails({ booking }: BookingDetailsProps) {
                 <div className="flex justify-between">
                   <p className="text-sm text-muted-foreground">Balance Due</p>
                   <p className="font-medium">
-                    {formatNaira(booking.amount - booking.depositAmount)}
+                    {formatNaira(booking.amount * days - booking.depositAmount)}
                   </p>
                 </div>
               )}

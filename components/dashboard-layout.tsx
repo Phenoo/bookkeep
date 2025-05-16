@@ -217,7 +217,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: DollarSign,
     },
     {
-      title: "Issues Report",
+      title: "Admin Issues Report",
       href: "/dashboard/admin/reports-issues",
       icon: FileUser,
     },

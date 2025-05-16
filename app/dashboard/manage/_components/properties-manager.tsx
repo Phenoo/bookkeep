@@ -45,6 +45,7 @@ type Property = {
   description?: string;
   type: string;
   address?: string;
+  floor: string;
   pricePerDay?: number;
   pricePerMonth?: number;
   isAvailable: boolean;
@@ -66,6 +67,7 @@ export function PropertiesManager() {
     name: "",
     description: "",
     type: "rental",
+    floor: "",
     address: "",
     pricePerDay: 0,
     pricePerMonth: 0,
@@ -79,11 +81,18 @@ export function PropertiesManager() {
     { value: "other", label: "Other" },
   ];
 
+  const floorTypes = [
+    { value: "Ground Floor", label: "Ground Floor" },
+    { value: "First Floor", label: "First Floor" },
+    { value: "Second Floor", label: "Second Floor" },
+    { value: "Third Floor", label: "Third Floor" },
+  ];
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
       type: "rental",
+      floor: "",
       address: "",
       pricePerDay: 0,
       pricePerMonth: 0,
@@ -99,6 +108,7 @@ export function PropertiesManager() {
         name: formData.name,
         description: formData.description || undefined,
         type: formData.type,
+        floor: formData.floor,
         address: formData.address || undefined,
         pricePerDay: formData.pricePerDay || undefined,
         pricePerMonth: formData.pricePerMonth || undefined,
@@ -127,6 +137,7 @@ export function PropertiesManager() {
       name: property.name,
       description: property.description || "",
       type: property.type,
+      floor: property.floor,
       address: property.address || "",
       pricePerDay: property.pricePerDay || 0,
       pricePerMonth: property.pricePerMonth || 0,
@@ -146,6 +157,7 @@ export function PropertiesManager() {
         name: formData.name,
         description: formData.description || undefined,
         type: formData.type,
+        floor: formData.floor,
         address: formData.address || undefined,
         pricePerDay: formData.pricePerDay || undefined,
         pricePerMonth: formData.pricePerMonth || undefined,
@@ -230,25 +242,47 @@ export function PropertiesManager() {
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="type">Property Type</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, type: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select property type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {propertyTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-type">Property Type</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, type: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select property type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {propertyTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-type">Property Floor</Label>
+                    <Select
+                      value={formData.floor}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, floor: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the floor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {floorTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
@@ -359,6 +393,9 @@ export function PropertiesManager() {
                     {property.description}
                   </p>
                 )}
+                {property.floor && (
+                  <div className="text-sm">Floor: {property.floor}</div>
+                )}
                 {property.address && (
                   <div className="text-sm">Location: {property.address}</div>
                 )}
@@ -428,25 +465,47 @@ export function PropertiesManager() {
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="edit-type">Property Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select property type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {propertyTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-type">Property Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, type: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select property type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {propertyTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-type">Property Floor</Label>
+                  <Select
+                    value={formData.floor}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, floor: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select the floor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {floorTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid gap-2">

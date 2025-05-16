@@ -21,6 +21,8 @@ export const seedProperties = mutation({
         address: "123 Main St, Apt 4B",
         pricePerDay: 75,
         pricePerMonth: 1200,
+        floor: "Floor 1",
+
         isAvailable: true,
       },
       {
@@ -31,6 +33,7 @@ export const seedProperties = mutation({
         pricePerDay: 150,
         pricePerMonth: 2500,
         isAvailable: true,
+        floor: "Floor 1",
       },
       {
         name: "Storage Unit #42",
@@ -40,6 +43,7 @@ export const seedProperties = mutation({
         pricePerDay: 10,
         pricePerMonth: 150,
         isAvailable: true,
+        floor: "Floor 1",
       },
       {
         name: "Parking Space P12",
@@ -48,6 +52,8 @@ export const seedProperties = mutation({
         address: "321 Center St, Space P12",
         pricePerDay: 5,
         pricePerMonth: 75,
+        floor: "Floor 1",
+
         isAvailable: true,
       },
       {
@@ -57,6 +63,8 @@ export const seedProperties = mutation({
         address: "456 Business Ave, Room 200",
         pricePerDay: 200,
         pricePerMonth: 677,
+        floor: "Floor 1",
+
         isAvailable: true,
       },
       {
@@ -65,6 +73,8 @@ export const seedProperties = mutation({
         type: "apartment",
         address: "555 Park Ave, Apt 2A",
         pricePerDay: 60,
+        floor: "Floor 1",
+
         pricePerMonth: 950,
         isAvailable: true,
       },
@@ -72,6 +82,7 @@ export const seedProperties = mutation({
         name: "Retail Space 305",
         description: "Prime retail location with high foot traffic",
         type: "retail",
+        floor: "Floor 1",
         address: "777 Shopping St, Unit 305",
         pricePerDay: 200,
         pricePerMonth: 3500,

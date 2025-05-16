@@ -101,36 +101,45 @@ export function ExpenseForm() {
       return;
     }
 
-    const promise = createExpense({
-      title: formData.title,
-      amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
-      category: formData.category,
-      date: date.toISOString(),
-      paymentMethod: formData.paymentMethod || undefined,
-      vendor: formData.vendor || undefined,
-      notes: formData.notes || undefined,
-      createdBy: userId || "unknown",
-      isRecurring: isRecurring,
-      recurringFrequency: isRecurring ? formData.recurringFrequency : undefined,
-    });
+    try {
+      toast.loading("Recording expense...");
 
-    toast.promise(promise, {
-      loading: "Expense has been recorded successfully",
-      success: "Expense has been recorded successfully!",
-      error: "Failed to record expense. Please try again",
-    });
+      await createExpense({
+        title: formData.title,
+        amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
+        category: formData.category,
+        date: date.toISOString(),
+        paymentMethod: formData.paymentMethod || undefined,
+        vendor: formData.vendor || undefined,
+        notes: formData.notes || undefined,
+        createdBy: userId || "unknown",
+        isRecurring: isRecurring,
+        recurringFrequency: isRecurring
+          ? formData.recurringFrequency
+          : undefined,
+      });
 
-    setFormData({
-      title: "",
-      amount: "",
-      category: "",
-      paymentMethod: "",
-      vendor: "",
-      notes: "",
-      recurringFrequency: "",
-    });
-    setDate(new Date());
-    setIsRecurring(false);
+      toast.dismiss();
+      toast.success("Expense has been recorded successfully!");
+      setFormData({
+        title: "",
+        amount: "",
+        category: "",
+        paymentMethod: "",
+        vendor: "",
+        notes: "",
+        recurringFrequency: "",
+      });
+      setDate(new Date());
+      setIsRecurring(false);
+      // Reset form
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Failed to record expense: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   };
 
   return (
@@ -389,39 +398,48 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
       return;
     }
 
-    const promise = editExpense({
-      id: expense._id,
-      title: formData.title,
-      amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
-      category: formData.category,
-      date: date.toISOString(),
-      paymentMethod: formData.paymentMethod || undefined,
-      vendor: formData.vendor || undefined,
-      notes: formData.notes || undefined,
-      updatedBy: userId || "unknown",
-      isRecurring: isRecurring,
-      recurringFrequency: isRecurring ? formData.recurringFrequency : undefined,
-    });
-
-    toast.promise(promise, {
-      loading: "Expense has been recorded successfully",
-      success: "Expense has been recorded successfully!",
-      error: "Failed to record expense. Please try again",
-    });
-
     setIsEditing(false);
 
-    setFormData({
-      title: "",
-      amount: "",
-      category: "",
-      paymentMethod: "",
-      vendor: "",
-      notes: "",
-      recurringFrequency: "",
-    });
-    setDate(new Date());
-    setIsRecurring(false);
+    try {
+      toast.loading("Recording expense...");
+
+      await editExpense({
+        id: expense._id,
+        title: formData.title,
+        amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
+        category: formData.category,
+        date: date.toISOString(),
+        paymentMethod: formData.paymentMethod || undefined,
+        vendor: formData.vendor || undefined,
+        notes: formData.notes || undefined,
+        updatedBy: userId || "unknown",
+        isRecurring: isRecurring,
+        recurringFrequency: isRecurring
+          ? formData.recurringFrequency
+          : undefined,
+      });
+
+      toast.dismiss();
+      toast.success("Expense has been updated successfully!");
+      setFormData({
+        title: "",
+        amount: "",
+        category: "",
+        paymentMethod: "",
+        vendor: "",
+        notes: "",
+        recurringFrequency: "",
+      });
+      setDate(new Date());
+      setIsRecurring(false);
+      // Reset form
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Failed to record expense: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   };
 
   return (

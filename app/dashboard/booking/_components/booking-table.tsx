@@ -42,9 +42,9 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { formatNaira } from "@/lib/utils";
-import { EditBookingForm } from "./edit-booking-form";
 import { toast } from "sonner";
-import { BookingDetails } from "./booking-details";
+import { BookingDetails, calculateDays } from "./booking-details";
+import { EditBookingForm } from "./edit-booking";
 
 export function BookingsTable() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,6 +54,14 @@ export function BookingsTable() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const bookings = useQuery(api.bookings.getAll) || [];
   const properties = useQuery(api.properties.getAll) || [];
+
+  const availableProperties = properties.filter(
+    (item) => item.isAvailable === true
+  );
+
+  // If properties aren't loaded yet, use sample data
+  const propertiesData =
+    availableProperties.length > 0 ? availableProperties : [];
 
   // Filter bookings based on search query
   const filteredBookings = bookings.filter(
@@ -123,6 +131,7 @@ export function BookingsTable() {
                   <TableHead>Property</TableHead>
                   <TableHead>Dates</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>Deposit Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
@@ -148,7 +157,18 @@ export function BookingsTable() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>{formatNaira(booking.amount)}</TableCell>
+                      <TableCell>
+                        {formatNaira(
+                          booking.amount *
+                            calculateDays(
+                              new Date(booking.startDate),
+                              new Date(booking.endDate)
+                            )
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {formatNaira(booking.depositAmount)}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
@@ -209,10 +229,9 @@ export function BookingsTable() {
           <div className="mt-6">
             {editingBooking && (
               <EditBookingForm
-                properties={properties}
-                booking={editingBooking}
+                properties={propertiesData}
+                bookingId={editingBooking._id}
                 onSuccess={handleEditSuccess}
-                onCancel={() => setIsEditDialogOpen(false)}
               />
             )}
           </div>

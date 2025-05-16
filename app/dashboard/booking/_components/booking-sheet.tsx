@@ -19,12 +19,16 @@ export function BookingSheet() {
   const [isOpen, setIsOpen] = useState(false);
   const properties = useQuery(api.properties.getAll) || [];
 
+  const availableProperties = properties.filter(
+    (item) => item.isAvailable === true
+  );
   const handleSuccess = () => {
     setIsOpen(false);
   };
 
   // If properties aren't loaded yet, use sample data
-  const propertiesData = properties.length > 0 ? properties : [];
+  const propertiesData =
+    availableProperties.length > 0 ? availableProperties : [];
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>

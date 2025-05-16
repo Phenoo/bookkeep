@@ -16,7 +16,6 @@ export const getAll = query({
 export const getByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    // In a real app, you would verify the user is requesting their own issues
     // const identity = await ctx.auth.getUserIdentity()
     // if (!identity || (identity.subject !== args.userId && !isAdmin(identity)))
     //   throw new Error("Unauthorized")

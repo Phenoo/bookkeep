@@ -133,21 +133,30 @@ export default function UsersPage() {
 
     setIsLoading(true);
 
-    const promise = updateRole({
-      clerkId: selectedUser.clerkId,
-      role: selectedUser.role,
-    });
+    try {
+      toast.loading("Updating user role...");
 
-    toast.promise(promise, {
-      loading: "Updating user role",
-      success: `${selectedUser.firstName} ${selectedUser.lastName}'s role has been updated to ${selectedUser.role}`,
-      error: "Failed to update role. Please try again.",
-    });
-    setIsConfirmDialogOpen(false);
+      await updateRole({
+        clerkId: selectedUser.clerkId,
+        role: selectedUser.role,
+      });
 
-    setIsLoading(false);
+      toast.dismiss();
+      toast.success(
+        `${selectedUser.firstName} ${selectedUser.lastName}'s role has been updated to ${selectedUser.role}`
+      );
+
+      setIsConfirmDialogOpen(false);
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Failed to update role: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
-
   const confirmRoleUpdate = () => {
     setIsEditUserDialogOpen(false);
     setIsConfirmDialogOpen(true);
@@ -158,27 +167,38 @@ export default function UsersPage() {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
-  const onApporve = (userId: string) => {
-    const promise = approveUser({
-      clerkId: userId,
-    });
-    toast.promise(promise, {
-      loading: "Approving user...",
-      success: "User successfully approved",
-      error: "Error approving user.",
-    });
+  const onApprove = async (userId: string) => {
+    try {
+      toast.loading("Approving user...");
+      await approveUser({
+        clerkId: userId,
+      });
+      toast.dismiss();
+      toast.success("User successfully approved");
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Error approving user: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   };
 
-  const onSuspend = (userId: string) => {
-    const promise = suspendUser({
-      clerkId: userId,
-    });
-
-    toast.promise(promise, {
-      loading: "Suspending user...",
-      success: "User successfully suspended",
-      error: "Error suspending user.",
-    });
+  const onSuspend = async (userId: string) => {
+    try {
+      toast.loading("Suspending user...");
+      await suspendUser({
+        clerkId: userId,
+      });
+      toast.dismiss();
+      toast.success("User successfully suspended");
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Error suspending user: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   };
   const viewUserDetails = (userId: string) => {
     router.push(`/dashboard/admin/users/${userId}`);
@@ -292,7 +312,7 @@ export default function UsersPage() {
                               <DropdownMenuSeparator />
                               {!user.isApproved ? (
                                 <DropdownMenuItem
-                                  onClick={() => onApporve(user.clerkId)}
+                                  onClick={() => onApprove(user.clerkId)}
                                 >
                                   <ShieldCheck className="mr-2 h-4 w-4" />
                                   Approve User

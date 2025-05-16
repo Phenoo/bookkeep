@@ -100,37 +100,45 @@ export function ExpenseForm() {
       });
       return;
     }
+    try {
+      toast.loading("Recording expense...");
 
-    const promise = createExpense({
-      title: formData.title,
-      amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
-      category: formData.category,
-      date: date.toISOString(),
-      paymentMethod: formData.paymentMethod || undefined,
-      vendor: formData.vendor || undefined,
-      notes: formData.notes || undefined,
-      createdBy: userId || "unknown",
-      isRecurring: isRecurring,
-      recurringFrequency: isRecurring ? formData.recurringFrequency : undefined,
-    });
+      await createExpense({
+        title: formData.title,
+        amount: Math.round(Number.parseFloat(formData.amount) * 100), // Convert to cents
+        category: formData.category,
+        date: date.toISOString(),
+        paymentMethod: formData.paymentMethod || undefined,
+        vendor: formData.vendor || undefined,
+        notes: formData.notes || undefined,
+        createdBy: userId || "unknown",
+        isRecurring: isRecurring,
+        recurringFrequency: isRecurring
+          ? formData.recurringFrequency
+          : undefined,
+      });
 
-    toast.promise(promise, {
-      loading: "Expense has been recorded successfully",
-      success: "Expense has been recorded successfully!",
-      error: "Failed to record expense. Please try again",
-    });
-
-    setFormData({
-      title: "",
-      amount: "",
-      category: "",
-      paymentMethod: "",
-      vendor: "",
-      notes: "",
-      recurringFrequency: "",
-    });
-    setDate(new Date());
-    setIsRecurring(false);
+      toast.dismiss();
+      toast.success("Expense has been recorded successfully!");
+      setFormData({
+        title: "",
+        amount: "",
+        category: "",
+        paymentMethod: "",
+        vendor: "",
+        notes: "",
+        recurringFrequency: "",
+      });
+      setDate(new Date());
+      setIsRecurring(false);
+      // Reset form
+    } catch (error) {
+      toast.dismiss();
+      toast.error(
+        "Failed to record expense: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   };
 
   return (

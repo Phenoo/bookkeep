@@ -1,5 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+
+// Define interfaces for our data structures
+interface ConflictingBooking {
+  id: Id<"bookings">;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface AvailabilityResult {
+  available: boolean;
+  conflictingBooking: ConflictingBooking | null;
+}
 
 // Get all bookings
 export const getAll = query({
@@ -15,7 +30,7 @@ export const getAll = query({
 
 // Get a single booking by ID
 export const getById = query({
-  args: { id: v.id("bookings") }, // ✅ Correct table name here
+  args: { id: v.id("bookings") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
 
@@ -26,13 +41,74 @@ export const getById = query({
   },
 });
 
-// Add a new booking
+// Check if a property is available for the given date range
+export const checkAvailability = query({
+  args: {
+    propertyId: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    excludeBookingId: v.optional(v.id("bookings")),
+  },
+  handler: async (ctx, args): Promise<AvailabilityResult> => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Parse the dates
+    const requestStart = new Date(args.startDate);
+    const requestEnd = new Date(args.endDate);
+
+    // Get all bookings for this property
+    const bookings = await ctx.db
+      .query("bookings")
+      .filter((q) => q.eq(q.field("propertyId"), args.propertyId))
+      .filter((q) => q.neq(q.field("status"), "cancelled")) // Exclude cancelled bookings
+      .collect();
+
+    // Filter out the booking we're currently updating (if provided)
+    const relevantBookings = args.excludeBookingId
+      ? bookings.filter((booking) => booking._id !== args.excludeBookingId)
+      : bookings;
+
+    // Check for overlapping bookings
+    for (const booking of relevantBookings) {
+      const bookingStart = new Date(booking.startDate);
+      const bookingEnd = new Date(booking.endDate);
+
+      // Check if the requested dates overlap with this booking
+      // Overlap occurs when:
+      // 1. The requested start date is before the booking end date AND
+      // 2. The requested end date is after the booking start date
+      if (requestStart < bookingEnd && requestEnd > bookingStart) {
+        return {
+          available: false,
+          conflictingBooking: {
+            id: booking._id,
+            customerName: booking.customerName,
+            startDate: booking.startDate,
+            endDate: booking.endDate,
+          },
+        };
+      }
+    }
+
+    // If we get here, the property is available for the requested dates
+    return {
+      available: true,
+      conflictingBooking: null,
+    };
+  },
+});
+
+// Add a new booking with availability check
 export const add = mutation({
   args: {
     customerName: v.string(),
     customerEmail: v.optional(v.string()),
     customerPhone: v.optional(v.string()),
-    propertyId: v.id("properties"), // ✅ Should be ID type for reference
+    propertyId: v.id("properties"),
     propertyName: v.string(),
     startDate: v.string(),
     endDate: v.string(),
@@ -47,7 +123,6 @@ export const add = mutation({
         country: v.optional(v.string()),
       })
     ),
-    // Next of kin information (new)
     nextOfKin: v.optional(
       v.object({
         name: v.optional(v.string()),
@@ -66,6 +141,23 @@ export const add = mutation({
       throw new Error("Not authenticated");
     }
     const userId = identity?.subject || "anonymous";
+
+    // Check if the property is available for the requested dates
+    const availability = await ctx.runQuery(api.bookings.checkAvailability, {
+      propertyId: args.propertyId,
+      startDate: args.startDate,
+      endDate: args.endDate,
+    });
+
+    if (!availability.available) {
+      throw new Error(
+        `Property is already booked from ${new Date(
+          availability.conflictingBooking!.startDate
+        ).toLocaleDateString()} to ${new Date(availability.conflictingBooking!.endDate).toLocaleDateString()} by ${
+          availability.conflictingBooking!.customerName
+        }`
+      );
+    }
 
     // Create the booking
     const bookingId = await ctx.db.insert("bookings", {
@@ -106,15 +198,12 @@ export const add = mutation({
     });
 
     const sales = (await ctx.db.query("sales").order("desc").collect()) || [];
-
     const newValue = sales.length + 1;
 
     // Also create a sales record for this booking
     await ctx.db.insert("sales", {
       orderId: `BOOKING-${bookingId}`,
-
       customSalesId: `SALES-${newValue}`,
-
       items: [
         {
           id: args.propertyId,
@@ -141,14 +230,14 @@ export const add = mutation({
   },
 });
 
-// Update a booking
+// Update a booking with availability check
 export const update = mutation({
   args: {
-    id: v.id("bookings"), // ✅ Should be Id<"bookings">
+    id: v.id("bookings"),
     customerName: v.optional(v.string()),
     customerEmail: v.optional(v.string()),
     customerPhone: v.optional(v.string()),
-    propertyId: v.optional(v.id("properties")), // ✅ Maintain correct ID type
+    propertyId: v.optional(v.string()),
     propertyName: v.optional(v.string()),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
@@ -161,7 +250,6 @@ export const update = mutation({
         country: v.optional(v.string()),
       })
     ),
-    // Next of kin information (new)
     nextOfKin: v.optional(
       v.object({
         name: v.optional(v.string()),
@@ -187,6 +275,34 @@ export const update = mutation({
     const existingBooking = await ctx.db.get(id);
     if (!existingBooking) {
       throw new Error("Booking not found");
+    }
+
+    // If dates or property are being changed, check availability
+    if (
+      (rest.startDate || rest.endDate || rest.propertyId) &&
+      rest.status !== "cancelled"
+    ) {
+      const startDate = rest.startDate || existingBooking.startDate;
+      const endDate = rest.endDate || existingBooking.endDate;
+      const propertyId = rest.propertyId || existingBooking.propertyId;
+
+      // Only check availability if this is not a cancellation
+      const availability = await ctx.runQuery(api.bookings.checkAvailability, {
+        propertyId,
+        startDate,
+        endDate,
+        excludeBookingId: id, // Exclude the current booking from the check
+      });
+
+      if (!availability.available) {
+        throw new Error(
+          `Property is already booked from ${new Date(
+            availability.conflictingBooking!.startDate
+          ).toLocaleDateString()} to ${new Date(availability.conflictingBooking!.endDate).toLocaleDateString()} by ${
+            availability.conflictingBooking!.customerName
+          }`
+        );
+      }
     }
 
     // Update the booking
@@ -216,7 +332,7 @@ export const update = mutation({
 
 // Delete a booking
 export const remove = mutation({
-  args: { id: v.id("bookings") }, // ✅ Correct table here
+  args: { id: v.id("bookings") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
 
@@ -252,5 +368,50 @@ export const remove = mutation({
     });
 
     return args.id;
+  },
+});
+
+// Get bookings for a specific property
+export const getByPropertyId = query({
+  args: { propertyId: v.id("properties") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    return await ctx.db
+      .query("bookings")
+      .filter((q) => q.eq(q.field("propertyId"), args.propertyId))
+      .order("desc")
+      .collect();
+  },
+});
+
+// Get bookings for a date range
+export const getByDateRange = query({
+  args: { startDate: v.string(), endDate: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const start = new Date(args.startDate);
+    const end = new Date(args.endDate);
+
+    // Get all bookings
+    const allBookings = await ctx.db.query("bookings").collect();
+
+    // Filter bookings that overlap with the given date range
+    return allBookings.filter((booking) => {
+      const bookingStart = new Date(booking.startDate);
+      const bookingEnd = new Date(booking.endDate);
+
+      // Check for overlap
+      return bookingStart <= end && bookingEnd >= start;
+    });
   },
 });
