@@ -183,6 +183,43 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
     // Reset availability check when dates change
     setAvailabilityResult(null);
   };
+  const sendBookingConfirmationEmail = async (
+    bookingId: string,
+    data: BookingFormData
+  ) => {
+    if (!data.customerEmail) return;
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: data.customerEmail,
+          subject: `Booking Confirmation: ${data.propertyName}`,
+          template: "booking-confirmation",
+          data: {
+            bookingId,
+            customerName: data.customerName,
+            propertyName: data.propertyName,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            amount:
+              data.amount *
+              calculateDays(new Date(data.startDate), new Date(data.endDate)),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Email notification failed:", errorData);
+      }
+    } catch (error) {
+      console.error("Failed to send booking confirmation email:", error);
+    }
+  };
 
   // Check availability
   const handleCheckAvailability = async () => {
@@ -247,7 +284,7 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
     setError("");
 
     try {
-      await addBooking({
+      const bookingId = await addBooking({
         customerName: formData.customerName,
         customerEmail: formData.customerEmail || undefined,
         customerPhone: formData.customerPhone || undefined,
@@ -278,6 +315,9 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
           : undefined,
       });
 
+      if (formData.customerEmail) {
+        await sendBookingConfirmationEmail(bookingId, formData);
+      }
       toast({
         title: "Booking created",
         description: `Successfully booked ${formData.propertyName} for ${formData.customerName}`,

@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { calculateDays } from "./booking-details";
 
 // Define interfaces for our data structures
 interface Property {
@@ -267,6 +268,41 @@ export function EditBookingForm({
     }
   };
 
+  const sendBookingUpdateEmail = async (data: BookingFormData) => {
+    if (!data.customerEmail) return;
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: data.customerEmail,
+          subject: `Booking Update: ${data.propertyName}`,
+          template: "booking-confirmation",
+          data: {
+            bookingId: bookingId,
+            customerName: data.customerName,
+            propertyName: data.propertyName,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            amount:
+              data.amount *
+              calculateDays(new Date(data.startDate), new Date(data.endDate)),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Email notification failed:", errorData);
+      }
+    } catch (error) {
+      console.error("Failed to send booking update email:", error);
+    }
+  };
+
   // Handle status change
   const handleStatusChange = (status: string) => {
     setFormData({
@@ -372,6 +408,9 @@ export function EditBookingForm({
           : undefined,
       });
 
+      if (formData.customerEmail) {
+        await sendBookingUpdateEmail(formData);
+      }
       toast({
         title: "Booking updated",
         description: `Successfully updated booking for ${formData.propertyName}`,
