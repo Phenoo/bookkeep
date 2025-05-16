@@ -22,7 +22,7 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     type: v.string(),
-    floor: v.string(),
+    floor: v.optional(v.string()),
     address: v.optional(v.string()),
     pricePerDay: v.optional(v.number()),
     pricePerMonth: v.optional(v.number()),
