@@ -190,6 +190,7 @@ export default defineSchema({
     receipt: v.optional(v.string()), // URL to receipt image
     notes: v.optional(v.string()),
     vendor: v.optional(v.string()),
+    image: v.optional(v.string()),
     createdBy: v.string(),
     isRecurring: v.optional(v.boolean()),
     recurringFrequency: v.optional(v.string()), // "daily", "weekly", "monthly", "yearly"

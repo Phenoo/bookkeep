@@ -26,7 +26,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, MoreHorizontal, Search, Trash, FileDown } from "lucide-react";
+import {
+  Edit,
+  MoreHorizontal,
+  Search,
+  Trash,
+  FileDown,
+  Eye,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "convex/react";
@@ -50,6 +57,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EditExpenseForm } from "./expense-form";
+import { ExpenseDetail } from "./expense-details";
 
 export function ExpensesTable() {
   const { toast } = useToast();
@@ -60,6 +68,13 @@ export function ExpensesTable() {
   const [editExpense, setEdtingExpense] = useState(false);
   const [expense, setExpense] = useState(null);
 
+  const [viewingExpenseId, setViewingExpenseId] =
+    useState<Id<"expenses"> | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const [sortField, setSortField] = useState<string>("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc"); // Default to newest first
+
   // Fetch expenses from Convex
   const expenses = useQuery(api.expenses.getAllExpenses) || [];
 
@@ -67,22 +82,33 @@ export function ExpensesTable() {
   const deleteExpense = useMutation(api.expenses.deleteExpense);
 
   // Filter expenses based on search query and category filter
-  const filteredExpenses = expenses.filter((expense) => {
-    if (categoryFilter && categoryFilter === "all") {
-      return expenses;
-    } else {
-      const matchesSearch =
-        expense.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.vendor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredExpenses = expenses
+    .filter((expense) => {
+      if (categoryFilter && categoryFilter === "all") {
+        return expenses;
+      } else {
+        const matchesSearch =
+          expense.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          expense.vendor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          expense.notes?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = categoryFilter
-        ? expense.category === categoryFilter
-        : true;
+        const matchesCategory = categoryFilter
+          ? expense.category === categoryFilter
+          : true;
 
-      return matchesSearch && matchesCategory;
-    }
-  });
+        return matchesSearch && matchesCategory;
+      }
+    })
+    .sort((a, b) => {
+      // Sort by the selected field
+      if (sortField === "date") {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      // Add more sort fields here if needed
+      return 0;
+    });
 
   const handleDelete = async (id: Id<"expenses">) => {
     if (confirm("Are you sure you want to delete this expense?")) {
@@ -104,6 +130,17 @@ export function ExpensesTable() {
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      // If already sorting by this field, toggle direction
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // If sorting by a new field, set it and default to ascending
+      setSortField(field);
+      setSortDirection("asc");
     }
   };
 
@@ -134,6 +171,11 @@ export function ExpensesTable() {
       default:
         return { color: "bg-slate-100 text-slate-800", label: "Other" };
     }
+  };
+
+  const handleViewDetails = (id: Id<"expenses">) => {
+    setViewingExpenseId(id);
+    setDetailOpen(true);
   };
 
   return (
@@ -192,7 +234,20 @@ export function ExpensesTable() {
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>
+                    <div
+                      className="flex items-center cursor-pointer"
+                      onClick={() => toggleSort("date")}
+                    >
+                      Date
+                      {sortField === "date" && (
+                        <span className="ml-1">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+
                   <TableHead>Vendor</TableHead>
                   <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
@@ -240,6 +295,11 @@ export function ExpensesTable() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
+                              onClick={() => handleViewDetails(expense._id)}
+                            >
+                              <Eye className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() => {
                                 setExpense(expense);
                                 setEdtingExpense(true);
@@ -281,6 +341,14 @@ export function ExpensesTable() {
           <EditExpenseForm expense={expense} setIsEditing={setEdtingExpense} />
         </DialogContent>
       </Dialog>
+      <ExpenseDetail
+        expenseId={viewingExpenseId}
+        isOpen={detailOpen}
+        onClose={() => {
+          setDetailOpen(false);
+          setViewingExpenseId(null);
+        }}
+      />
     </>
   );
 }

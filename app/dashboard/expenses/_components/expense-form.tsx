@@ -36,12 +36,17 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/image-uploader";
+import { useRouter } from "next/navigation";
 
 export function ExpenseForm() {
   const { toast: toaster } = useToast();
+  const router = useRouter();
+
   const { userId } = useAuth();
   const [date, setDate] = useState<Date>(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
+  const [success, setSucccess] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     amount: "",
@@ -49,6 +54,7 @@ export function ExpenseForm() {
     paymentMethod: "",
     vendor: "",
     notes: "",
+    image: "",
     recurringFrequency: "",
   });
 
@@ -112,13 +118,14 @@ export function ExpenseForm() {
         paymentMethod: formData.paymentMethod || undefined,
         vendor: formData.vendor || undefined,
         notes: formData.notes || undefined,
+        image: formData.image || undefined,
         createdBy: userId || "unknown",
         isRecurring: isRecurring,
         recurringFrequency: isRecurring
           ? formData.recurringFrequency
           : undefined,
       });
-
+      setSucccess(true);
       toast.dismiss();
       toast.success("Expense has been recorded successfully!");
       setFormData({
@@ -127,11 +134,13 @@ export function ExpenseForm() {
         category: "",
         paymentMethod: "",
         vendor: "",
+        image: "",
         notes: "",
         recurringFrequency: "",
       });
       setDate(new Date());
       setIsRecurring(false);
+      router.refresh();
       // Reset form
     } catch (error) {
       toast.dismiss();
@@ -143,7 +152,7 @@ export function ExpenseForm() {
   };
 
   return (
-    <Card>
+    <Card className="max-h-[90vh] overflow-y-auto">
       <CardHeader>
         <CardTitle>Add New Expense</CardTitle>
         <CardDescription>Record a new business expense</CardDescription>
@@ -262,43 +271,14 @@ export function ExpenseForm() {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isRecurring"
-              checked={isRecurring}
-              onCheckedChange={(checked) => setIsRecurring(!!checked)}
+          <div className="grid gap-2">
+            <Label htmlFor="image">Receipt Document (Optional)</Label>
+            <ImageUpload
+              value={formData.image}
+              trigger={success}
+              onChange={(url) => setFormData({ ...formData, image: url })}
             />
-            <Label
-              htmlFor="isRecurring"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              This is a recurring expense
-            </Label>
           </div>
-
-          {isRecurring && (
-            <div className="space-y-2">
-              <Label htmlFor="recurringFrequency">Frequency</Label>
-              <Select
-                value={formData.recurringFrequency}
-                onValueChange={(value) =>
-                  handleSelectChange("recurringFrequency", value)
-                }
-              >
-                <SelectTrigger id="recurringFrequency">
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea
@@ -322,8 +302,11 @@ export function ExpenseForm() {
 
 export function EditExpenseForm({ expense, setIsEditing }: any) {
   const { toast: toaster } = useToast();
+  const router = useRouter();
   const { userId } = useAuth();
   const [date, setDate] = useState<Date>(new Date());
+  const [success, setSucccess] = useState(false);
+
   const [isRecurring, setIsRecurring] = useState(false);
   const [formData, setFormData] = useState({
     title: expense.title,
@@ -332,6 +315,7 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
     paymentMethod: expense.paymentMethod,
     vendor: expense.vendor,
     notes: expense.notes,
+    image: expense.image,
     recurringFrequency: "",
   });
 
@@ -342,6 +326,7 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
       category: expense.category,
       paymentMethod: expense.paymentMethod,
       vendor: expense.vendor,
+      image: expense.image,
       notes: expense.notes,
       recurringFrequency: "",
     });
@@ -411,6 +396,7 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
         date: date.toISOString(),
         paymentMethod: formData.paymentMethod || undefined,
         vendor: formData.vendor || undefined,
+        image: formData.image || undefined,
         notes: formData.notes || undefined,
         updatedBy: userId || "unknown",
         isRecurring: isRecurring,
@@ -420,6 +406,7 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
       });
 
       toast.dismiss();
+      setSucccess(true);
       toast.success("Expense has been updated successfully!");
       setFormData({
         title: "",
@@ -428,10 +415,12 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
         paymentMethod: "",
         vendor: "",
         notes: "",
+        image: null,
         recurringFrequency: "",
       });
       setDate(new Date());
       setIsRecurring(false);
+      router.refresh();
       // Reset form
     } catch (error) {
       toast.dismiss();
@@ -443,7 +432,7 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
   };
 
   return (
-    <Card className="border-none mt-4">
+    <Card className="border-none mt-4 max-h-[90vh] overflow-y-auto">
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -558,43 +547,14 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isRecurring"
-              checked={isRecurring}
-              onCheckedChange={(checked) => setIsRecurring(!!checked)}
+          <div className="grid gap-2">
+            <Label htmlFor="image">Receipt Document (Optional)</Label>
+            <ImageUpload
+              value={formData.image}
+              trigger={success}
+              onChange={(url) => setFormData({ ...formData, image: url })}
             />
-            <Label
-              htmlFor="isRecurring"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              This is a recurring expense
-            </Label>
           </div>
-
-          {isRecurring && (
-            <div className="space-y-2">
-              <Label htmlFor="recurringFrequency">Frequency</Label>
-              <Select
-                value={formData.recurringFrequency}
-                onValueChange={(value) =>
-                  handleSelectChange("recurringFrequency", value)
-                }
-              >
-                <SelectTrigger id="recurringFrequency">
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea

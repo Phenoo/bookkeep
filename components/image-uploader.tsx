@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, X } from "lucide-react";
 import Image from "next/image";
@@ -10,10 +10,11 @@ import { toast } from "@/hooks/use-toast";
 
 interface ImageUploadProps {
   value: string;
+  trigger?: boolean;
   onChange: (url: string) => void;
 }
 
-export function ImageUpload({ value, onChange }: ImageUploadProps) {
+export function ImageUpload({ value, trigger, onChange }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +81,12 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       fileInputRef.current.value = "";
     }
   };
+
+  useEffect(() => {
+    if (trigger) {
+      handleRemove();
+    }
+  }, [trigger]);
 
   return (
     <div className="space-y-4">

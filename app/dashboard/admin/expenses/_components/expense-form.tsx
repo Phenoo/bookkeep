@@ -261,43 +261,6 @@ export function ExpenseForm() {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isRecurring"
-              checked={isRecurring}
-              onCheckedChange={(checked) => setIsRecurring(!!checked)}
-            />
-            <Label
-              htmlFor="isRecurring"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              This is a recurring expense
-            </Label>
-          </div>
-
-          {isRecurring && (
-            <div className="space-y-2">
-              <Label htmlFor="recurringFrequency">Frequency</Label>
-              <Select
-                value={formData.recurringFrequency}
-                onValueChange={(value) =>
-                  handleSelectChange("recurringFrequency", value)
-                }
-              >
-                <SelectTrigger id="recurringFrequency">
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea

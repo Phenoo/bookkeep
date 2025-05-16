@@ -11,6 +11,8 @@ export const createExpense = mutation({
     paymentMethod: v.optional(v.string()),
     receipt: v.optional(v.string()),
     notes: v.optional(v.string()),
+    image: v.optional(v.string()),
+
     vendor: v.optional(v.string()),
     createdBy: v.string(),
     isRecurring: v.optional(v.boolean()),
@@ -33,6 +35,7 @@ export const createExpense = mutation({
       paymentMethod: args.paymentMethod,
       receipt: args.receipt,
       notes: args.notes,
+      image: args.notes,
       vendor: args.vendor,
       createdBy: userId,
       isRecurring: args.isRecurring || false,
@@ -148,6 +151,7 @@ export const updateExpense = mutation({
     category: v.optional(v.string()),
     date: v.optional(v.string()),
     paymentMethod: v.optional(v.string()),
+    image: v.optional(v.string()),
     receipt: v.optional(v.string()),
     notes: v.optional(v.string()),
     vendor: v.optional(v.string()),
@@ -237,5 +241,19 @@ export const deleteExpense = mutation({
     });
 
     return { success: true };
+  },
+});
+
+export const getExpenseById = query({
+  args: { id: v.id("expenses") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const expense = await ctx.db.get(args.id);
+    return expense;
   },
 });
