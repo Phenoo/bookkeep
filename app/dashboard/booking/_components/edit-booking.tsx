@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Info, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -37,33 +37,6 @@ interface Property {
   name: string;
   pricePerDay?: number;
   depositAmount?: number;
-}
-
-interface Booking {
-  _id: Id<"bookings">;
-  customerName: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  propertyId: Id<"properties">;
-  propertyName: string;
-  startDate: string;
-  endDate: string;
-  amount: number;
-  depositAmount: number;
-  notes?: string;
-  status: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-  };
-  nextOfKin?: {
-    name?: string;
-    relationship?: string;
-    phone?: string;
-  };
 }
 
 interface Address {
@@ -314,6 +287,11 @@ export function EditBookingForm({
   // Check availability
   const handleCheckAvailability = async () => {
     if (!formData.propertyId || !formData.startDate || !formData.endDate) {
+      toast({
+        variant: "destructive",
+        description:
+          "Please select a property and date range to check availability",
+      });
       setError("Please select a property and date range to check availability");
       return;
     }
@@ -329,6 +307,12 @@ export function EditBookingForm({
         if (!(checkAvailability as AvailabilityResult).available) {
           const conflict = (checkAvailability as AvailabilityResult)
             .conflictingBooking;
+          toast({
+            variant: "destructive",
+            description: `Property is already booked from ${new Date(conflict!.startDate).toLocaleDateString()} to ${new Date(
+              conflict!.endDate
+            ).toLocaleDateString()} by ${conflict!.customerName}`,
+          });
           setError(
             `Property is already booked from ${new Date(conflict!.startDate).toLocaleDateString()} to ${new Date(
               conflict!.endDate
@@ -338,6 +322,10 @@ export function EditBookingForm({
       }
     } catch (err: any) {
       setError(err.message || "Failed to check availability");
+      toast({
+        variant: "destructive",
+        description: err.message || "Failed to check availability",
+      });
       setAvailabilityResult(null);
     } finally {
       setIsCheckingAvailability(false);
@@ -623,6 +611,13 @@ export function EditBookingForm({
           </Button>
         )}
       </div>
+
+      <Alert>
+        <Info className="h-4 w-4 text-rose-500" />
+        <AlertDescription>
+          Always check the availability of the apartment before you proceed.
+        </AlertDescription>
+      </Alert>
 
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Customer Information</h3>

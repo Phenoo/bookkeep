@@ -95,6 +95,18 @@ export default function InventoryPage() {
   const [isStockAdjustmentDialogOpen, setIsStockAdjustmentDialogOpen] =
     useState(false);
   const [currentItem, setCurrentItem] = useState<InventoryItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Id<"inventory">[]>([]);
+  const [isCategoryEditDialogOpen, setIsCategoryEditDialogOpen] =
+    useState(false);
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false);
+  const [bulkEditData, setBulkEditData] = useState({
+    category: "",
+    costPerUnit: "",
+    reorderLevel: "",
+    supplier: "",
+    notes: "",
+  });
 
   const { user, isLoaded: isClerkLoaded } = useUser();
 
@@ -122,6 +134,9 @@ export default function InventoryPage() {
   const addInventoryItem = useMutation(api.inventory.add);
   const updateInventoryItem = useMutation(api.inventory.update);
   const deleteInventoryItem = useMutation(api.inventory.remove);
+  const addCreationHistory = useMutation(
+    api.migrations.addCreationHistoryToExistingInventory
+  );
 
   // Get unique categories for filter
   const categories = [
@@ -220,6 +235,14 @@ export default function InventoryPage() {
         status = "Low Stock";
       }
 
+      // Call the mutation to add the item to the database
+      await addInventoryItem({
+        ...formData,
+        totalValue,
+        status,
+        lastUpdated: new Date().toISOString(),
+      });
+
       toast({
         title: "Success",
         description: "Inventory item added successfully",
@@ -301,6 +324,82 @@ export default function InventoryPage() {
     }
   };
 
+  // Handle bulk update
+  const handleBulkUpdate = async () => {
+    try {
+      // Create an object with only the fields that have values
+      const updateData: Record<string, any> = {};
+      if (bulkEditData.category) updateData.category = bulkEditData.category;
+      if (bulkEditData.costPerUnit)
+        updateData.costPerUnit = Number(bulkEditData.costPerUnit);
+      if (bulkEditData.reorderLevel)
+        updateData.reorderLevel = Number(bulkEditData.reorderLevel);
+      if (bulkEditData.supplier) updateData.supplier = bulkEditData.supplier;
+      if (bulkEditData.notes) updateData.notes = bulkEditData.notes;
+
+      // If no fields to update, show a message and return
+      if (Object.keys(updateData).length === 0) {
+        toast({
+          title: "No changes",
+          description: "Please specify at least one field to update",
+        });
+        return;
+      }
+
+      // Update each selected item
+      const updatePromises = selectedItems.map((itemId) =>
+        updateInventoryItem({
+          id: itemId,
+          ...updateData,
+          lastUpdated: new Date().toISOString(),
+          reason: "Bulk update",
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      toast({
+        title: "Success",
+        description: `Updated ${selectedItems.length} inventory items successfully`,
+      });
+
+      // Reset form and close dialog
+      setBulkEditData({
+        category: "",
+        costPerUnit: "",
+        reorderLevel: "",
+        supplier: "",
+        notes: "",
+      });
+      setSelectedItems([]);
+      setIsBulkEditDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update inventory items",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle checkbox selection
+  const toggleItemSelection = (itemId: Id<"inventory">) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  // Handle select all checkbox
+  const toggleSelectAll = () => {
+    if (selectedItems.length === filteredItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(filteredItems.map((item) => item._id));
+    }
+  };
+
   // Export inventory to CSV
   const exportToCSV = () => {
     // Create CSV content
@@ -377,10 +476,6 @@ export default function InventoryPage() {
     );
   }
 
-  const addCreationHistory = useMutation(
-    api.migrations.addCreationHistoryToExistingInventory
-  );
-
   const runMigration = async () => {
     try {
       const migrationResult = await addCreationHistory({});
@@ -392,6 +487,48 @@ export default function InventoryPage() {
   if (role === "user") {
     return redirect("/dashboard/pos");
   }
+
+  // Handle bulk category update
+  const handleBulkCategoryUpdate = async () => {
+    try {
+      if (!bulkCategory.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a category name",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update each selected item
+      const updatePromises = selectedItems.map((itemId) =>
+        updateInventoryItem({
+          id: itemId,
+          category: bulkCategory,
+          lastUpdated: new Date().toISOString(),
+          reason: "Bulk category update",
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      toast({
+        title: "Success",
+        description: `Updated category for ${selectedItems.length} inventory items`,
+      });
+
+      // Reset form and close dialog
+      setBulkCategory("");
+      setSelectedItems([]);
+      setIsCategoryEditDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update inventory items",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -433,6 +570,15 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
+                {selectedItems.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsCategoryEditDialogOpen(true)}
+                  >
+                    <Edit className="mr-2 h-4 w-4" /> Change Category (
+                    {selectedItems.length})
+                  </Button>
+                )}
                 <Select
                   value={categoryFilter}
                   onValueChange={(value) => setCategoryFilter(value)}
@@ -455,6 +601,19 @@ export default function InventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          checked={
+                            selectedItems.length === filteredItems.length &&
+                            filteredItems.length > 0
+                          }
+                          onChange={toggleSelectAll}
+                        />
+                      </div>
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Quantity</TableHead>
@@ -469,7 +628,22 @@ export default function InventoryPage() {
                 <TableBody>
                   {filteredItems.length > 0 ? (
                     filteredItems.map((item) => (
-                      <TableRow key={item._id}>
+                      <TableRow
+                        key={item._id}
+                        className={
+                          selectedItems.includes(item._id) ? "bg-muted/50" : ""
+                        }
+                      >
+                        <TableCell>
+                          <div className="flex items-center justify-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                              checked={selectedItems.includes(item._id)}
+                              onChange={() => toggleItemSelection(item._id)}
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">
                           {item.name}
                         </TableCell>
@@ -535,7 +709,7 @@ export default function InventoryPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-24 text-center">
+                      <TableCell colSpan={10} className="h-24 text-center">
                         No results found.
                       </TableCell>
                     </TableRow>
@@ -586,7 +760,7 @@ export default function InventoryPage() {
                   id="quantity"
                   name="quantity"
                   type="number"
-                  min={"0"}
+                  min="0"
                   value={formData.quantity}
                   onChange={handleInputChange}
                   placeholder="Enter quantity"
@@ -610,7 +784,7 @@ export default function InventoryPage() {
                   id="costPerUnit"
                   name="costPerUnit"
                   type="number"
-                  min={"0"}
+                  min="0"
                   value={formData.costPerUnit}
                   onChange={handleInputChange}
                   onWheel={(e) => e.currentTarget.blur()}
@@ -623,7 +797,7 @@ export default function InventoryPage() {
                   id="reorderLevel"
                   name="reorderLevel"
                   type="number"
-                  min={"0"}
+                  min="0"
                   value={formData.reorderLevel}
                   onChange={handleInputChange}
                   placeholder="Enter reorder level"
@@ -699,7 +873,7 @@ export default function InventoryPage() {
                   id="edit-quantity"
                   name="quantity"
                   type="number"
-                  min={"0"}
+                  min="0"
                   value={formData.quantity}
                   onChange={handleInputChange}
                   placeholder="Enter quantity"
@@ -723,7 +897,7 @@ export default function InventoryPage() {
                   id="edit-costPerUnit"
                   name="costPerUnit"
                   type="number"
-                  min={"0"}
+                  min="0"
                   value={formData.costPerUnit}
                   onChange={handleInputChange}
                   placeholder="Enter cost per unit"
@@ -734,7 +908,8 @@ export default function InventoryPage() {
                 <Input
                   id="edit-reorderLevel"
                   name="reorderLevel"
-                  min={"0"}
+                  type="number"
+                  min="0"
                   value={formData.reorderLevel}
                   onChange={handleInputChange}
                   placeholder="Enter reorder level"
@@ -815,6 +990,142 @@ export default function InventoryPage() {
         currentQuantity={currentItem?.quantity}
         unit={currentItem?.unit}
       />
+
+      {/* Bulk Edit Dialog */}
+      <Dialog
+        open={isBulkEditDialogOpen}
+        onOpenChange={setIsBulkEditDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Bulk Edit Inventory Items</DialogTitle>
+            <DialogDescription>
+              Edit {selectedItems.length} items at once. Only filled fields will
+              be updated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bulk-category">Category</Label>
+              <Input
+                id="bulk-category"
+                value={bulkEditData.category}
+                onChange={(e) =>
+                  setBulkEditData({ ...bulkEditData, category: e.target.value })
+                }
+                placeholder="Leave empty to keep existing values"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="bulk-costPerUnit">Cost Per Unit</Label>
+                <Input
+                  id="bulk-costPerUnit"
+                  type="number"
+                  min="0"
+                  value={bulkEditData.costPerUnit}
+                  onChange={(e) =>
+                    setBulkEditData({
+                      ...bulkEditData,
+                      costPerUnit: e.target.value,
+                    })
+                  }
+                  placeholder="Leave empty to keep existing values"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="bulk-reorderLevel">Reorder Level</Label>
+                <Input
+                  id="bulk-reorderLevel"
+                  type="number"
+                  min="0"
+                  value={bulkEditData.reorderLevel}
+                  onChange={(e) =>
+                    setBulkEditData({
+                      ...bulkEditData,
+                      reorderLevel: e.target.value,
+                    })
+                  }
+                  placeholder="Leave empty to keep existing values"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bulk-supplier">Supplier</Label>
+              <Input
+                id="bulk-supplier"
+                value={bulkEditData.supplier}
+                onChange={(e) =>
+                  setBulkEditData({ ...bulkEditData, supplier: e.target.value })
+                }
+                placeholder="Leave empty to keep existing values"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bulk-notes">Notes</Label>
+              <Textarea
+                id="bulk-notes"
+                value={bulkEditData.notes}
+                onChange={(e) =>
+                  setBulkEditData({ ...bulkEditData, notes: e.target.value })
+                }
+                placeholder="Leave empty to keep existing values"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleBulkUpdate}>
+              Update {selectedItems.length} Items
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Edit Dialog */}
+      <Dialog
+        open={isCategoryEditDialogOpen}
+        onOpenChange={setIsCategoryEditDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Category</DialogTitle>
+            <DialogDescription>
+              Update the category for {selectedItems.length} selected item
+              {selectedItems.length !== 1 ? "s" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bulk-category">New Category</Label>
+
+              <Input
+                className="mt-2"
+                placeholder="Enter new category name"
+                value={bulkCategory === "new-category" ? "" : bulkCategory}
+                onChange={(e) => setBulkCategory(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCategoryEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleBulkCategoryUpdate}>
+              Update {selectedItems.length} Item
+              {selectedItems.length !== 1 ? "s" : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
