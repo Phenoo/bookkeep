@@ -23,6 +23,7 @@ import { useUser } from "@clerk/clerk-react";
 import { Spinner } from "@/components/spinner";
 import { redirect } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const sales = useQuery(api.sales.getAllSales) || [];

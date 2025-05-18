@@ -73,7 +73,13 @@ export function IssueReportForm({ onSubmitSuccess }: IssueReportFormProps) {
       });
 
       toast.success(
-        "Your issue has been submitted and will be reviewed shortly."
+        "Your issue has been submitted and will be reviewed shortly.",
+        {
+          style: {
+            background: "green",
+            color: "white",
+          },
+        }
       );
 
       // Reset form
@@ -90,7 +96,13 @@ export function IssueReportForm({ onSubmitSuccess }: IssueReportFormProps) {
       }
     } catch (error) {
       toast.error(
-        "There was a problem submitting your issue. Please try again."
+        "There was a problem submitting your issue. Please try again.",
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     } finally {
       setIsSubmitting(false);

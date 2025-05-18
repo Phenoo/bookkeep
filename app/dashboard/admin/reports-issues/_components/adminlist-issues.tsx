@@ -148,9 +148,19 @@ export function AdminIssueList() {
         status: newStatus,
       });
 
-      toast.success(`Issue status changed to ${newStatus}`);
+      toast.success(`Issue status changed to ${newStatus}`, {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
     } catch (error) {
-      toast.error("There was a problem updating the issue status");
+      toast.error("There was a problem updating the issue status", {
+        style: {
+          background: "red",
+          color: "white",
+        },
+      });
     }
   };
 
@@ -170,9 +180,19 @@ export function AdminIssueList() {
 
       setEditDialogOpen(false);
 
-      toast.success("The issue has been successfully updated");
+      toast.success("The issue has been successfully updated", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
     } catch (error) {
-      toast.success("here was a problem updating the issue");
+      toast.error("here was a problem updating the issue", {
+        style: {
+          background: "red",
+          color: "white",
+        },
+      });
     }
   };
 
@@ -192,10 +212,21 @@ export function AdminIssueList() {
       toast.success(
         assignee
           ? "The issue has been assigned"
-          : "The issue has been unassigned"
+          : "The issue has been unassigned",
+        {
+          style: {
+            background: "green",
+            color: "white",
+          },
+        }
       );
     } catch (error) {
-      toast.error("There was a problem assigning the issue");
+      toast.error("There was a problem assigning the issue", {
+        style: {
+          background: "red",
+          color: "white",
+        },
+      });
     }
   };
 

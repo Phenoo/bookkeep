@@ -99,7 +99,12 @@ export function BookingsTable() {
   const handleEditSuccess = () => {
     setIsEditDialogOpen(false);
     setEditingBooking(null);
-    toast.success("The booking has been successfully updated.");
+    toast.success("The booking has been successfully updated.", {
+      style: {
+        background: "green",
+        color: "white",
+      },
+    });
   };
   // If no bookings are loaded yet, use sample data
   const displayBookings = bookings.length > 0 ? filteredBookings : [];

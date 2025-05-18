@@ -237,7 +237,12 @@ export function PosSystem() {
         status: "pending",
       });
       toast.dismiss();
-      toast.success("Order completed");
+      toast.success("Order completed", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
 
       // Clear cart and customer details
       setCart([]);
@@ -252,7 +257,13 @@ export function PosSystem() {
       toast.dismiss();
       toast.error(
         "Error taking order: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     }
   };

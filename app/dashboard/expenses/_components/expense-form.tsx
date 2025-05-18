@@ -127,7 +127,12 @@ export function ExpenseForm() {
       });
       setSucccess(true);
       toast.dismiss();
-      toast.success("Expense has been recorded successfully!");
+      toast.success("Expense has been recorded successfully!", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
       setFormData({
         title: "",
         amount: "",
@@ -146,7 +151,13 @@ export function ExpenseForm() {
       toast.dismiss();
       toast.error(
         "Failed to record expense: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     }
   };
@@ -407,7 +418,12 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
 
       toast.dismiss();
       setSucccess(true);
-      toast.success("Expense has been updated successfully!");
+      toast.success("Expense has been updated successfully!", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
       setFormData({
         title: "",
         amount: "",
@@ -426,7 +442,13 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
       toast.dismiss();
       toast.error(
         "Failed to record expense: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     }
   };

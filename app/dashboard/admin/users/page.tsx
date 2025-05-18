@@ -143,7 +143,13 @@ export default function UsersPage() {
 
       toast.dismiss();
       toast.success(
-        `${selectedUser.firstName} ${selectedUser.lastName}'s role has been updated to ${selectedUser.role}`
+        `${selectedUser.firstName} ${selectedUser.lastName}'s role has been updated to ${selectedUser.role}`,
+        {
+          style: {
+            background: "green",
+            color: "white",
+          },
+        }
       );
 
       setIsConfirmDialogOpen(false);
@@ -151,7 +157,13 @@ export default function UsersPage() {
       toast.dismiss();
       toast.error(
         "Failed to update role: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     } finally {
       setIsLoading(false);
@@ -174,12 +186,23 @@ export default function UsersPage() {
         clerkId: userId,
       });
       toast.dismiss();
-      toast.success("User successfully approved");
+      toast.success("User successfully approved", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
     } catch (error) {
       toast.dismiss();
       toast.error(
         "Error approving user: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     }
   };
@@ -191,12 +214,23 @@ export default function UsersPage() {
         clerkId: userId,
       });
       toast.dismiss();
-      toast.success("User successfully suspended");
+      toast.success("User successfully suspended", {
+        style: {
+          background: "green",
+          color: "white",
+        },
+      });
     } catch (error) {
       toast.dismiss();
       toast.error(
         "Error suspending user: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
+        {
+          style: {
+            background: "red",
+            color: "white",
+          },
+        }
       );
     }
   };
