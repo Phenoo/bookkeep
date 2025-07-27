@@ -190,11 +190,20 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
     field: "startDate" | "endDate",
     date: Date | undefined
   ) => {
-    const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
+    const normalizedDate =
+      date !== undefined
+        ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) // midnight local
+        : undefined;
+
+    const formattedDate = normalizedDate
+      ? format(normalizedDate, "yyyy-MM-dd")
+      : "";
+
     setFormData({
       ...formData,
       [field]: formattedDate,
     });
+
     // Reset availability check when dates change
     setAvailabilityResult(null);
   };
@@ -461,7 +470,7 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.startDate
-                    ? format(new Date(formData.startDate), "PPP")
+                    ? format(parseISO(formData.startDate), "PPP")
                     : "Select date"}
                 </Button>
               </PopoverTrigger>
@@ -494,7 +503,7 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.endDate
-                    ? format(new Date(formData.endDate), "PPP")
+                    ? format(parseISO(formData.endDate), "PPP")
                     : "Select date"}
                 </Button>
               </PopoverTrigger>

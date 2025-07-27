@@ -205,17 +205,33 @@ export function EditBookingForm({
     field: "startDate" | "endDate",
     date: Date | undefined
   ) => {
-    const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
+    if (!date) {
+      setFormData({
+        ...formData,
+        [field]: "",
+      });
+      return;
+    }
+
+    // Normalize to remove time component
+    const normalizedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+    const formattedDate = format(normalizedDate, "yyyy-MM-dd");
+
     setFormData({
       ...formData,
       [field]: formattedDate,
     });
 
-    // Reset availability check when dates change
-    if (
-      formattedDate !==
-      (field === "startDate" ? booking?.startDate : booking?.endDate)
-    ) {
+    // Reset availability only if date has changed
+    const bookingDate =
+      field === "startDate" ? booking?.startDate : booking?.endDate;
+
+    if (formattedDate !== bookingDate) {
       setAvailabilityResult(null);
     }
   };
@@ -516,7 +532,7 @@ export function EditBookingForm({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.startDate
-                    ? format(new Date(formData.startDate), "PPP")
+                    ? format(parseISO(formData.startDate), "PPP")
                     : "Select date"}
                 </Button>
               </PopoverTrigger>
@@ -550,7 +566,7 @@ export function EditBookingForm({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.endDate
-                    ? format(new Date(formData.endDate), "PPP")
+                    ? format(parseISO(formData.endDate), "PPP")
                     : "Select date"}
                 </Button>
               </PopoverTrigger>
