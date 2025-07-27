@@ -379,7 +379,6 @@ export function SnookerCoinsTracker() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>

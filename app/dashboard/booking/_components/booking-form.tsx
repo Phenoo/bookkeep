@@ -463,7 +463,6 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                       : undefined
                   }
                   onSelect={(date) => handleDateSelect("startDate", date)}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>
@@ -496,7 +495,6 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                     formData.endDate ? new Date(formData.endDate) : undefined
                   }
                   onSelect={(date) => handleDateSelect("endDate", date)}
-                  initialFocus
                   disabled={(date) =>
                     formData.startDate
                       ? date < new Date(formData.startDate)

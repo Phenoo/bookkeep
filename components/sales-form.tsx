@@ -196,7 +196,6 @@ export default function SalesForm({ category, onSave }: SalesFormProps) {
                   mode="single"
                   selected={date}
                   onSelect={(date) => date && setDate(date)}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>

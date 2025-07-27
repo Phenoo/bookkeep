@@ -521,7 +521,6 @@ export function EditBookingForm({
                       : undefined
                   }
                   onSelect={(date) => handleDateSelect("startDate", date)}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>
@@ -554,7 +553,6 @@ export function EditBookingForm({
                     formData.endDate ? new Date(formData.endDate) : undefined
                   }
                   onSelect={(date) => handleDateSelect("endDate", date)}
-                  initialFocus
                   disabled={(date) =>
                     formData.startDate
                       ? date < new Date(formData.startDate)

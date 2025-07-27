@@ -242,7 +242,6 @@ export function ExpenseForm() {
                     mode="single"
                     selected={date}
                     onSelect={(date) => date && setDate(date)}
-                    initialFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -529,7 +528,6 @@ export function EditExpenseForm({ expense, setIsEditing }: any) {
                     mode="single"
                     selected={date}
                     onSelect={(date) => date && setDate(date)}
-                    initialFocus
                   />
                 </PopoverContent>
               </Popover>
