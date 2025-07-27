@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CalendarIcon, Info, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -181,27 +181,6 @@ export function EditBookingForm({
   }, [booking]);
 
   // Handle input change
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData({
-        ...formData,
-        [parent]: {
-          ...formData[parent as keyof BookingFormData],
-          [child]: value,
-        },
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
-  };
 
   // Handle property selection
   const handlePropertySelect = (propertyId: string) => {
@@ -238,6 +217,35 @@ export function EditBookingForm({
       (field === "startDate" ? booking?.startDate : booking?.endDate)
     ) {
       setAvailabilityResult(null);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    // Convert numeric fields to numbers
+    const numericFields = ["amount", "depositAmount"];
+
+    const parsedValue = numericFields.includes(name)
+      ? parseFloat(value) || 0
+      : value;
+
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData({
+        ...formData,
+        [parent]: {
+          ...formData[parent as keyof BookingFormData],
+          [child]: parsedValue,
+        },
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: parsedValue,
+      });
     }
   };
 
@@ -517,7 +525,7 @@ export function EditBookingForm({
                   mode="single"
                   selected={
                     formData.startDate
-                      ? new Date(formData.startDate)
+                      ? parseISO(formData.startDate)
                       : undefined
                   }
                   onSelect={(date) => handleDateSelect("startDate", date)}
@@ -550,7 +558,7 @@ export function EditBookingForm({
                 <Calendar
                   mode="single"
                   selected={
-                    formData.endDate ? new Date(formData.endDate) : undefined
+                    formData.endDate ? parseISO(formData.endDate) : undefined
                   }
                   onSelect={(date) => handleDateSelect("endDate", date)}
                   disabled={(date) =>
