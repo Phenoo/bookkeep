@@ -474,7 +474,6 @@ export function BookingForm({ properties, onSuccess }: BookingFormProps) {
                       : undefined
                   }
                   onSelect={(date) => handleDateSelect("startDate", date)}
-                  disabled={(date) => date < new Date()}
                 />
               </PopoverContent>
             </Popover>
